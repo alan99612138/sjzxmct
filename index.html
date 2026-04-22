@@ -399,10 +399,31 @@ console.log('✅ GitHub部署系统已加载');
             background: #1890ff;
             color: white;
             border: none;
+            min-width: 110px;
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
         }
 
         .btn-primary:hover, .btn-secondary:hover, .btn-success:hover, .btn-warning:hover, .btn-info:hover, .btn-danger:hover {
             background: #40a9ff;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* 顶部按钮区域样式 */
+        .search-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-buttons button {
+            flex: 0 0 auto;
         }
 
         /* 特殊按钮保持原有功能但统一颜色 */
@@ -1664,19 +1685,25 @@ console.log('✅ GitHub部署系统已加载');
     <div class="container">
         <div id="data-page" class="page active">
             <div class="search-bar" style="padding: 10px 20px;">
-                <div class="search-buttons" style="justify-content: flex-start; flex-wrap: wrap;">
-                    <button onclick="loadExcelFile()" class="btn-primary">加载Excel文件</button>
-                    <button onclick="openKingdeeDocument()" class="btn-primary">📋 从云之家更新</button>
-                    <button onclick="exportData()" class="btn-primary require-login" style="display: inline-block;">导出Excel</button>
-                    <button onclick="saveToCloud()" class="btn-primary require-login" style="display: inline-block;">保存到云端</button>
-                    <button onclick="showCloudFilesList()" class="btn-primary require-login" style="display: inline-block;">从云端获取</button>
-                    <button onclick="showCloudConfig()" class="btn-primary require-login" style="display: inline-block;">云端配置</button>
-                    <button onclick="showGroupConfig()" class="btn-primary require-login" style="display: inline-block;">小组配置</button>
-                    <button onclick="deleteSelectedRows()" class="btn-primary require-login" id="batch-delete-btn" style="display: inline-block;">删除选中行</button>
-                    <button onclick="showUserManagement()" class="btn-primary admin-only" style="display: inline-block;">用户管理</button>
-                    <button onclick="showSaveAsDialog()" class="btn-primary require-login" style="display: inline-block;">另存为</button>
-                    <button onclick="showGitHubConfig()" class="btn-primary require-login admin-only" style="display: inline-block;">⚙️ GitHub配置</button>
-                    <button onclick="deployToGitHubPages()" class="btn-primary require-login admin-only" style="display: inline-block;">🐱 部署到GitHub</button>
+                <div class="search-buttons">
+                    <button onclick="loadExcelFile()" class="btn-primary">📂 加载Excel</button>
+                    <button onclick="openKingdeeDocument()" class="btn-primary">☁️ 云之家更新</button>
+                    <button onclick="exportData()" class="btn-primary require-login" style="display: inline-block;">📥 导出Excel</button>
+                    <button onclick="saveToCloud()" class="btn-primary require-login" style="display: inline-block;">💾 保存云端</button>
+                    <button onclick="showCloudFilesList()" class="btn-primary require-login" style="display: inline-block;">📤 云端获取</button>
+                    <button onclick="showSaveAsDialog()" class="btn-primary require-login" style="display: inline-block;">💾 另存为</button>
+                    
+                    <!-- 管理员功能下拉菜单 -->
+                    <div class="dropdown admin-only" id="admin-dropdown" style="display: inline-block; position: relative;">
+                        <button onclick="toggleAdminDropdown()" class="btn-primary">⚙️ 管理员功能 ▼</button>
+                        <div id="admin-dropdown-menu" style="display: block; position: absolute; top: 100%; left: 0px; background: white; border: 1px solid rgb(221, 221, 221); border-radius: 4px; box-shadow: rgba(0, 0, 0, 0.15) 0px 2px 8px; z-index: 1000; min-width: 150px;">
+                            <button onclick="showCloudConfig(); toggleAdminDropdown();" class="btn-primary" style="display: block; width: 100%; text-align: left; border-radius: 0; border-bottom: 1px solid #eee;">云端配置</button>
+                            <button onclick="showGroupConfig(); toggleAdminDropdown();" class="btn-primary" style="display: block; width: 100%; text-align: left; border-radius: 0; border-bottom: 1px solid #eee;">小组配置</button>
+                            <button onclick="showUserManagement(); toggleAdminDropdown();" class="btn-primary" style="display: block; width: 100%; text-align: left; border-radius: 0; border-bottom: 1px solid #eee;">用户管理</button>
+                            <button onclick="showGitHubConfig(); toggleAdminDropdown();" class="btn-primary" style="display: block; width: 100%; text-align: left; border-radius: 0; border-bottom: 1px solid #eee;">GitHub配置</button>
+                            <button onclick="deployToGitHubPages(); toggleAdminDropdown();" class="btn-primary" style="display: block; width: 100%; text-align: left; border-radius: 0;">部署到GitHub</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1687,336 +1714,14 @@ console.log('✅ GitHub部署系统已加载');
                         <div id="sheet-tabs" style="display: flex; gap: 5px; margin-right: 10px;"></div>
                         <button onclick="addNewRow()" class="btn-primary require-login" style="display: inline-block; padding: 6px 12px; border-radius: 4px; font-size: 13px;">+ 新增行</button>
                         <button onclick="insertRowAfterSelected()" class="btn-primary require-login" style="display: inline-block; padding: 6px 12px; border-radius: 4px; font-size: 13px;">插入行</button>
+                        <button onclick="deleteSelectedRows()" class="btn-primary require-login" id="batch-delete-btn" style="display: inline-block; padding: 6px 12px; border-radius: 4px; font-size: 13px;">删除行</button>
                         <button onclick="clearFilter()" class="btn-primary" id="clear-filter-btn" style="display: none; padding: 6px 12px; border-radius: 4px; font-size: 13px;">清除筛选</button>
                         <span id="record-count">共 0 条记录</span>
                     </div>
                 </div>
                 <div class="table-container">
                     <table id="data-table">
-                        <thead id="table-head"><tr><th rowspan="2" style="width: 40px;"><input type="checkbox" id="select-all" onclick="toggleSelectAll()"></th><th rowspan="2" style="width: 50px;">序号</th><th colspan="5">项目交付信息</th><th colspan="3">项目信息</th><th colspan="10">项目财务信息</th><th colspan="1">项目信息</th></tr><tr>
-                            <th>
-                                <div class="header-content" onclick="editHeader(0)">合同编号</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="合同编号">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('合同编号')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-合同编号">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('合同编号', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-合同编号">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('合同编号', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(1)">主项目编号</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="主项目编号">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('主项目编号')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-主项目编号">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('主项目编号', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-主项目编号">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('主项目编号', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(2)">主项目名称</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="主项目名称">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('主项目名称')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-主项目名称">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('主项目名称', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-主项目名称">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('主项目名称', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(3)">验收月份</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="验收月份">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('验收月份')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-验收月份">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('验收月份', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-验收月份">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('验收月份', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(4)">已达成 项目阶段</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="已达成 项目阶段">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('已达成 项目阶段')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-已达成 项目阶段">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('已达成 项目阶段', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-已达成 项目阶段">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('已达成 项目阶段', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(5)">产品名称</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="产品名称">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('产品名称')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-产品名称">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('产品名称', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-产品名称">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('产品名称', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(6)">业务类型</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="业务类型">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('业务类型')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-业务类型">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('业务类型', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-业务类型">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('业务类型', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(7)">项目经理</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="项目经理">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('项目经理')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-项目经理">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('项目经理', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-项目经理">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('项目经理', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(8)">首付款</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="首付款">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('首付款')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-首付款">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('首付款', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-首付款">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('首付款', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(9)">蓝图</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="蓝图">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('蓝图')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-蓝图">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('蓝图', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-蓝图">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('蓝图', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(10)">UAT测试</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="UAT测试">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('UAT测试')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-UAT测试">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('UAT测试', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-UAT测试">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('UAT测试', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(11)">上线</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="上线">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('上线')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-上线">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('上线', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-上线">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('上线', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(12)">验收</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="验收">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('验收')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-验收">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('验收', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-验收">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('验收', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(13)">质保</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="质保">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('质保')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-质保">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('质保', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-质保">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('质保', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(14)">合同总金额</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="合同总金额">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('合同总金额')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-合同总金额">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('合同总金额', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-合同总金额">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('合同总金额', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(15)">产品</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="产品">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('产品')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-产品">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('产品', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-产品">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('产品', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(16)">实施金额</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="实施金额">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('实施金额')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-实施金额">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('实施金额', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-实施金额">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('实施金额', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(17)">开发金额</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="开发金额">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('开发金额')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-开发金额">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('开发金额', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-开发金额">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('开发金额', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th>
-                            <th>
-                                <div class="header-content" onclick="editHeader(18)">备注</div>
-                                <div class="header-filter">
-                                    <div class="custom-filter-dropdown" data-column="备注">
-                                        <button class="custom-filter-trigger" onclick="toggleColumnFilter('备注')">全部</button>
-                                        <div class="custom-filter-panel" id="filter-panel-备注">
-                                            <div class="custom-filter-search">
-                                                <input type="text" placeholder="搜索..." oninput="searchColumnFilter('备注', this.value)">
-                                            </div>
-                                            <div class="custom-filter-options" id="filter-options-备注">
-                                                <div class="custom-filter-option selected" onclick="selectColumnFilterValue('备注', '')">全部</div>
-                                                
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </th></tr></thead>
+                        <thead id="table-head"></thead>
                         <tbody id="table-body"></tbody>
                     </table>
                 </div>
@@ -2032,9 +1737,9 @@ console.log('✅ GitHub部署系统已加载');
                         </select>
                     </div>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <button onclick="previousPage()" id="prev-btn" disabled="">上一页</button>
-                        <span id="page-info">第 1 页 / 共 0 页</span>
-                        <button onclick="nextPage()" id="next-btn" disabled="">下一页</button>
+                        <button onclick="previousPage()" id="prev-btn">上一页</button>
+                        <span id="page-info">第 1 页</span>
+                        <button onclick="nextPage()" id="next-btn">下一页</button>
                     </div>
                 </div>
             </div>
@@ -7177,12 +6882,35 @@ console.log('✅ GitHub部署系统已加载');
                 btn.style.display = isLoggedIn ? 'inline-block' : 'none';
             });
             
-            // admin专用按钮
-            const adminOnlyButtons = document.querySelectorAll('.admin-only');
-            adminOnlyButtons.forEach(btn => {
-                btn.style.display = isAdmin() ? 'inline-block' : 'none';
+            // admin专用按钮和下拉菜单
+            const adminOnlyElements = document.querySelectorAll('.admin-only');
+            adminOnlyElements.forEach(el => {
+                if (el.classList.contains('dropdown')) {
+                    el.style.display = isAdmin() ? 'inline-block' : 'none';
+                } else {
+                    el.style.display = isAdmin() ? 'inline-block' : 'none';
+                }
             });
         }
+
+        // 切换管理员下拉菜单
+        function toggleAdminDropdown() {
+            const menu = document.getElementById('admin-dropdown-menu');
+            if (menu.style.display === 'none') {
+                menu.style.display = 'block';
+            } else {
+                menu.style.display = 'none';
+            }
+        }
+
+        // 点击其他地方关闭下拉菜单
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('admin-dropdown');
+            const menu = document.getElementById('admin-dropdown-menu');
+            if (dropdown && menu && !dropdown.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
         
         // 显示用户管理模态框
         function showUserManagement() {
@@ -7278,38 +7006,8 @@ console.log('✅ GitHub部署系统已加载');
                         </tr>
                     </thead>
                     <tbody id="user-list-body">
-                <tr>
-                    <td>admin</td>
-                    <td>管理员</td>
-                    <td>
-                        <span style="color: #999;">系统账号</span>
-                    </td>
-                </tr>
-            
-                <tr>
-                    <td>于子凌</td>
-                    <td>普通用户</td>
-                    <td>
-                        <button onclick="deleteUserFromManagement('于子凌')" class="btn-delete" style="padding: 4px 8px; font-size: 12px;">删除</button>
-                    </td>
-                </tr>
-            
-                <tr>
-                    <td>孟伟朋</td>
-                    <td>普通用户</td>
-                    <td>
-                        <button onclick="deleteUserFromManagement('孟伟朋')" class="btn-delete" style="padding: 4px 8px; font-size: 12px;">删除</button>
-                    </td>
-                </tr>
-            
-                <tr>
-                    <td>张仕通</td>
-                    <td>普通用户</td>
-                    <td>
-                        <button onclick="deleteUserFromManagement('张仕通')" class="btn-delete" style="padding: 4px 8px; font-size: 12px;">删除</button>
-                    </td>
-                </tr>
-            </tbody>
+                        <!-- 动态生成用户列表 -->
+                    </tbody>
                 </table>
             </div>
             <div class="modal-buttons" style="margin-top: 20px;">
