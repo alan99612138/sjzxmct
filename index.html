@@ -2183,27 +2183,40 @@ console.log('✅ GitHub部署系统已加载');
             // 初始化用户系统（确保admin存在）
             getUsers();
             
-            // 检查是否已登录，恢复登录状态
-            const savedUser = localStorage.getItem(CURRENT_USER_KEY);
-            if (savedUser) {
-                try {
-                    const user = JSON.parse(savedUser);
-                    // 验证用户是否仍然有效
-                    const users = getUsers();
-                    const validUser = users.find(u => u.username === user.username && u.password === user.password);
-                    if (validUser) {
-                        isLoggedIn = true;
-                        currentUser = validUser;
-                        document.getElementById('user-status').textContent = validUser.role === 'admin' ? '管理员' : validUser.username;
-                        document.getElementById('login-btn').style.display = 'none';
-                        document.getElementById('logout-btn').style.display = 'block';
-                        updateButtonVisibility();
-                    } else {
-                        // 用户已被删除或密码已更改
+            // 检查是否是首次访问（通过sessionStorage标记）
+            const hasVisitedThisSession = sessionStorage.getItem('has_visited_this_session');
+            
+            if (!hasVisitedThisSession) {
+                // 首次访问，清除之前的登录状态
+                localStorage.removeItem(CURRENT_USER_KEY);
+                sessionStorage.setItem('has_visited_this_session', 'true');
+                isLoggedIn = false;
+                currentUser = null;
+                document.getElementById('user-status').textContent = '未登录';
+                document.getElementById('login-btn').style.display = 'block';
+                document.getElementById('logout-btn').style.display = 'none';
+                updateButtonVisibility();
+            } else {
+                // 非首次访问，恢复登录状态
+                const savedUser = localStorage.getItem(CURRENT_USER_KEY);
+                if (savedUser) {
+                    try {
+                        const user = JSON.parse(savedUser);
+                        const users = getUsers();
+                        const validUser = users.find(u => u.username === user.username && u.password === user.password);
+                        if (validUser) {
+                            isLoggedIn = true;
+                            currentUser = validUser;
+                            document.getElementById('user-status').textContent = validUser.role === 'admin' ? '管理员' : validUser.username;
+                            document.getElementById('login-btn').style.display = 'none';
+                            document.getElementById('logout-btn').style.display = 'block';
+                            updateButtonVisibility();
+                        } else {
+                            localStorage.removeItem(CURRENT_USER_KEY);
+                        }
+                    } catch (e) {
                         localStorage.removeItem(CURRENT_USER_KEY);
                     }
-                } catch (e) {
-                    localStorage.removeItem(CURRENT_USER_KEY);
                 }
             }
             
@@ -6863,6 +6876,7 @@ console.log('✅ GitHub部署系统已加载');
             isLoggedIn = false;
             currentUser = null;
             localStorage.removeItem(CURRENT_USER_KEY);
+            sessionStorage.removeItem('has_visited_this_session'); // 清除访问标记，下次需要重新登录
             
             document.getElementById('user-status').textContent = '未登录';
             document.getElementById('login-btn').style.display = 'block';
