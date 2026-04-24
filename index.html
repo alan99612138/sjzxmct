@@ -4522,42 +4522,47 @@ console.log('✅ GitHub部署系统已加载');
         async function refreshCloudFilesList() {
             const client = await initOSS();
             if (!client) return;
-            
+
             const loadingEl = document.getElementById('cloud-files-loading');
             const emptyEl = document.getElementById('cloud-files-empty');
             const tbody = document.getElementById('cloud-files-list-body');
-            
+
             loadingEl.style.display = 'block';
             emptyEl.style.display = 'none';
             tbody.innerHTML = '';
-            
+
             try {
-                // 列出 index/ 目录下的所有文件
+                // 列出 s/ 目录下的所有文件
                 const result = await client.list({
-                    prefix: 'index/',
+                    prefix: 's/',
                     'max-keys': 100
                 });
-                
+
                 const files = [];
                 if (result.objects) {
                     for (const obj of result.objects) {
-                        try {
-                            const fileResult = await client.get(obj.name);
-                            const fileInfo = JSON.parse(fileResult.content.toString());
-                            files.push(fileInfo);
-                        } catch (e) {
-                            console.error('读取文件信息失败:', obj.name, e);
+                        // 只处理 .json 文件，排除 _users.json 和 _config.json
+                        if (obj.name.endsWith('.json') &&
+                            !obj.name.endsWith('_users.json') &&
+                            !obj.name.endsWith('_config.json')) {
+                            try {
+                                const fileResult = await client.get(obj.name);
+                                const fileInfo = JSON.parse(fileResult.content.toString());
+                                files.push(fileInfo);
+                            } catch (e) {
+                                console.error('读取文件信息失败:', obj.name, e);
+                            }
                         }
                     }
                 }
-                
+
                 // 按时间倒序排列
                 files.sort((a, b) => new Date(b.uploadTime) - new Date(a.uploadTime));
-                
+
                 window.cloudFilesData = files; // 保存用于搜索
-                
+
                 loadingEl.style.display = 'none';
-                
+
                 if (files.length === 0) {
                     emptyEl.style.display = 'block';
                 } else {
