@@ -5655,123 +5655,73 @@ console.log('✅ GitHub部署系统已加载');
             }
 
             try {
-                // 列出所有云端文件
-                const result = await client.list({
-                    prefix: 's/',
-                    'max-keys': 100
-                });
+                // 首先尝试从按主项目编号保存的文件中加载（跨文件共享）
+                console.log('尝试从按项目编号保存的文件加载...');
+                try {
+                    const projectFileName = `p/${projectCode}.json`;
+                    const projectFileResult = await client.get(projectFileName);
+                    const projectData = JSON.parse(projectFileResult.content.toString());
 
-                if (!result.objects || result.objects.length === 0) {
-                    console.log('云端没有文件');
-                    return;
-                }
+                    console.log('找到按项目编号保存的穿透数据:', projectData);
 
-                // 遍历所有文件，查找包含相同主项目编号的穿透数据
-                for (const obj of result.objects) {
-                    // 跳过用户数据和配置文件
-                    if (obj.name.endsWith('_users.json') || obj.name.endsWith('_config.json')) {
-                        continue;
-                    }
+                    if (projectData.penetrationData) {
+                        const foundPenetration = projectData.penetrationData;
 
-                    try {
-                        const fileResult = await client.get(obj.name);
-                        const cloudData = JSON.parse(fileResult.content.toString());
-
-                        // 检查是否有穿透数据
-                        if (cloudData.penetrationData && cloudData.allSheetsData) {
-                            // 在所有sheet中查找匹配的主项目编号
-                            let foundPenetration = null;
-                            let foundRowIndex = null;
-
-                            for (const [sheetName, sheetData] of Object.entries(cloudData.allSheetsData)) {
-                                const data = sheetData.data || [];
-                                const sheetHeaders = sheetData.headers || [];
-
-                                // 查找主项目编号列
-                                const projectCodeColumn = sheetHeaders.find(h =>
-                                    h.includes('主项目编号') || h.includes('项目编号') || h.includes('项目号')
-                                );
-
-                                if (projectCodeColumn) {
-                                    // 查找匹配的行
-                                    const matchingRowIndex = data.findIndex(row =>
-                                        row[projectCodeColumn] === projectCode
-                                    );
-
-                                    if (matchingRowIndex !== -1) {
-                                        // 找到了匹配的主项目编号，获取对应的穿透数据
-                                        const penetrationForRow = cloudData.penetrationData[matchingRowIndex];
-                                        if (penetrationForRow && (
-                                            (penetrationForRow.records && penetrationForRow.records.length > 0) ||
-                                            (penetrationForRow.todos && penetrationForRow.todos.length > 0)
-                                        )) {
-                                            foundPenetration = penetrationForRow;
-                                            foundRowIndex = matchingRowIndex;
-                                            console.log(`在文件 ${obj.name} 的Sheet ${sheetName} 中找到匹配的穿透数据`);
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (foundPenetration) {
-                                // 将找到的穿透数据合并到当前项目中
-                                if (!penetrationData[rowIndex]) {
-                                    penetrationData[rowIndex] = {
-                                        records: [],
-                                        todos: [],
-                                        milestones: {}
-                                    };
-                                }
-
-                                // 合并记录（去重）
-                                if (foundPenetration.records) {
-                                    const existingIds = new Set(penetrationData[rowIndex].records.map(r => r.id));
-                                    foundPenetration.records.forEach(record => {
-                                        if (!existingIds.has(record.id)) {
-                                            penetrationData[rowIndex].records.push(record);
-                                            existingIds.add(record.id);
-                                        }
-                                    });
-                                }
-
-                                // 合并待办事项（去重）
-                                if (foundPenetration.todos) {
-                                    const existingIds = new Set(penetrationData[rowIndex].todos.map(t => t.id));
-                                    foundPenetration.todos.forEach(todo => {
-                                        if (!existingIds.has(todo.id)) {
-                                            penetrationData[rowIndex].todos.push(todo);
-                                            existingIds.add(todo.id);
-                                        }
-                                    });
-                                }
-
-                                // 合并里程碑
-                                if (foundPenetration.milestones) {
-                                    penetrationData[rowIndex].milestones = {
-                                        ...penetrationData[rowIndex].milestones,
-                                        ...foundPenetration.milestones
-                                    };
-                                }
-
-                                // 保存到本地存储
-                                localStorage.setItem('penetrationData', JSON.stringify(penetrationData));
-
-                                console.log('穿透数据已从云端加载并合并');
-
-                                // 显示提示
-                                const recordCount = foundPenetration.records?.length || 0;
-                                const todoCount = foundPenetration.todos?.length || 0;
-                                if (recordCount > 0 || todoCount > 0) {
-                                    console.log(`从云端同步: ${recordCount} 条记录, ${todoCount} 条待办`);
-                                }
-
-                                return; // 找到后退出
-                            }
+                        // 将找到的穿透数据合并到当前项目中
+                        if (!penetrationData[rowIndex]) {
+                            penetrationData[rowIndex] = {
+                                records: [],
+                                todos: [],
+                                milestones: {}
+                            };
                         }
-                    } catch (e) {
-                        console.error('读取文件失败:', obj.name, e);
+
+                        // 合并记录（去重）
+                        if (foundPenetration.records) {
+                            const existingIds = new Set(penetrationData[rowIndex].records.map(r => r.id));
+                            foundPenetration.records.forEach(record => {
+                                if (!existingIds.has(record.id)) {
+                                    penetrationData[rowIndex].records.push(record);
+                                    existingIds.add(record.id);
+                                }
+                            });
+                        }
+
+                        // 合并待办事项（去重）
+                        if (foundPenetration.todos) {
+                            const existingIds = new Set(penetrationData[rowIndex].todos.map(t => t.id));
+                            foundPenetration.todos.forEach(todo => {
+                                if (!existingIds.has(todo.id)) {
+                                    penetrationData[rowIndex].todos.push(todo);
+                                    existingIds.add(todo.id);
+                                }
+                            });
+                        }
+
+                        // 合并里程碑
+                        if (foundPenetration.milestones) {
+                            penetrationData[rowIndex].milestones = {
+                                ...penetrationData[rowIndex].milestones,
+                                ...foundPenetration.milestones
+                            };
+                        }
+
+                        // 保存到本地存储
+                        localStorage.setItem('penetrationData', JSON.stringify(penetrationData));
+
+                        console.log('穿透数据已从云端加载并合并（按项目编号）');
+
+                        // 显示提示
+                        const recordCount = foundPenetration.records?.length || 0;
+                        const todoCount = foundPenetration.todos?.length || 0;
+                        if (recordCount > 0 || todoCount > 0) {
+                            console.log(`从云端同步: ${recordCount} 条记录, ${todoCount} 条待办`);
+                        }
+
+                        return; // 找到后退出
                     }
+                } catch (e) {
+                    console.log('未找到按项目编号保存的穿透数据:', e.message);
                 }
 
                 console.log('未找到匹配的穿透数据');
@@ -5900,8 +5850,71 @@ console.log('✅ GitHub部署系统已加载');
 
                 console.log('穿透数据自动同步到云端成功');
 
+                // 同时按主项目编号保存穿透数据（用于跨文件共享）
+                await savePenetrationByProjectCode(client);
+
             } catch (error) {
                 console.error('自动保存穿透数据到云端失败:', error);
+            }
+        }
+
+        // 按主项目编号保存穿透数据（用于跨文件共享）
+        async function savePenetrationByProjectCode(client) {
+            console.log('按主项目编号保存穿透数据...');
+
+            if (!excelData || excelData.length === 0 || !headers || headers.length === 0) {
+                console.log('没有Excel数据，跳过按项目编号保存');
+                return;
+            }
+
+            // 查找主项目编号列
+            const projectCodeColumn = headers.find(h =>
+                h.includes('主项目编号') || h.includes('项目编号') || h.includes('项目号')
+            );
+
+            if (!projectCodeColumn) {
+                console.log('未找到主项目编号列，跳过按项目编号保存');
+                return;
+            }
+
+            // 遍历所有行的穿透数据
+            for (let rowIndex = 0; rowIndex < excelData.length; rowIndex++) {
+                const row = excelData[rowIndex];
+                const projectCode = row[projectCodeColumn];
+
+                if (!projectCode) continue;
+
+                const penetration = penetrationData[rowIndex];
+                if (!penetration) continue;
+
+                // 检查是否有实际的穿透数据
+                const hasRecords = penetration.records && penetration.records.length > 0;
+                const hasTodos = penetration.todos && penetration.todos.length > 0;
+                const hasMilestones = penetration.milestones && Object.keys(penetration.milestones).length > 0;
+
+                if (!hasRecords && !hasTodos && !hasMilestones) continue;
+
+                try {
+                    // 使用主项目编号作为文件名
+                    const fileName = `p/${projectCode}.json`;
+
+                    // 准备数据
+                    const dataToSave = {
+                        projectCode: projectCode,
+                        projectName: row[headers.find(h => h.includes('项目名称'))] || '',
+                        penetrationData: penetration,
+                        saveTime: new Date().toISOString(),
+                        savedBy: localStorage.getItem('currentUser') || '未知用户'
+                    };
+
+                    // 上传到 OSS
+                    const content = JSON.stringify(dataToSave);
+                    await client.put(fileName, new Blob([content], { type: 'application/json' }));
+
+                    console.log(`穿透数据已按项目编号保存: ${projectCode}`);
+                } catch (error) {
+                    console.error(`保存项目 ${projectCode} 的穿透数据失败:`, error);
+                }
             }
         }
 
