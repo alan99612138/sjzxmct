@@ -2352,7 +2352,7 @@ console.log('✅ GitHub部署系统已加载');
                             </div>
                         </div>
                         <div class="form-buttons">
-                            <button onclick="(async () =&gt; { await saveMilestones(); })()" class="btn-primary" id="milestone-save-btn">保存节点备案</button>
+                            <button onclick="handleSaveMilestones()" class="btn-primary" id="milestone-save-btn">保存节点备案</button>
                         </div>
                     </div>
                 </div>
@@ -5673,8 +5673,8 @@ console.log('✅ GitHub部署系统已加载');
         async function loadMilestonesFromCloudByProjectCode(projectCode) {
             if (!projectCode) return null;
             
-            const cloudConfig = getCloudConfig();
-            if (!cloudConfig) {
+            // 检查OSS配置
+            if (!OSS_CONFIG.accessKeyId || !OSS_CONFIG.accessKeySecret || !OSS_CONFIG.bucket) {
                 console.log('未配置云端存储，无法加载节点备案数据');
                 return null;
             }
@@ -5684,10 +5684,10 @@ console.log('✅ GitHub部署系统已加载');
                 
                 // 创建OSS客户端
                 const client = new OSS({
-                    region: cloudConfig.region,
-                    bucket: cloudConfig.bucket,
-                    accessKeyId: cloudConfig.accessKeyId,
-                    accessKeySecret: cloudConfig.accessKeySecret,
+                    region: OSS_CONFIG.region,
+                    bucket: OSS_CONFIG.bucket,
+                    accessKeyId: OSS_CONFIG.accessKeyId,
+                    accessKeySecret: OSS_CONFIG.accessKeySecret,
                     secure: true
                 });
                 
@@ -5749,6 +5749,15 @@ console.log('✅ GitHub部署系统已加载');
                 } else {
                     item.classList.remove('completed');
                 }
+            });
+        }
+        
+        // 处理保存节点备案按钮点击
+        function handleSaveMilestones() {
+            console.log('保存节点备案按钮被点击');
+            saveMilestones().catch(error => {
+                console.error('保存节点备案失败:', error);
+                alert('❌ 保存节点备案失败: ' + error.message);
             });
         }
         
@@ -5838,8 +5847,8 @@ console.log('✅ GitHub部署系统已加载');
                 return;
             }
             
-            const cloudConfig = getCloudConfig();
-            if (!cloudConfig) {
+            // 检查OSS配置
+            if (!OSS_CONFIG.accessKeyId || !OSS_CONFIG.accessKeySecret || !OSS_CONFIG.bucket) {
                 console.log('未配置云端存储，无法保存节点备案');
                 return;
             }
@@ -5849,10 +5858,10 @@ console.log('✅ GitHub部署系统已加载');
                 
                 // 创建OSS客户端
                 const client = new OSS({
-                    region: cloudConfig.region,
-                    bucket: cloudConfig.bucket,
-                    accessKeyId: cloudConfig.accessKeyId,
-                    accessKeySecret: cloudConfig.accessKeySecret,
+                    region: OSS_CONFIG.region,
+                    bucket: OSS_CONFIG.bucket,
+                    accessKeyId: OSS_CONFIG.accessKeyId,
+                    accessKeySecret: OSS_CONFIG.accessKeySecret,
                     secure: true
                 });
                 
