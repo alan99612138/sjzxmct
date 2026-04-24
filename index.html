@@ -2094,7 +2094,12 @@ console.log('✅ GitHub部署系统已加载');
             });
             saveUsers(users);
             // 自动同步到云端
-            saveUserDataToCloud();
+            console.log('添加用户后准备同步到云端...');
+            saveUserDataToCloud().then(() => {
+                console.log('用户添加并同步完成');
+            }).catch(err => {
+                console.error('用户同步到云端失败:', err);
+            });
             return { success: true, message: '用户添加成功' };
         }
 
@@ -2107,7 +2112,12 @@ console.log('✅ GitHub部署系统已加载');
             users = users.filter(u => u.username !== username);
             saveUsers(users);
             // 自动同步到云端
-            saveUserDataToCloud();
+            console.log('删除用户后准备同步到云端...');
+            saveUserDataToCloud().then(() => {
+                console.log('用户删除并同步完成');
+            }).catch(err => {
+                console.error('用户同步到云端失败:', err);
+            });
             return { success: true, message: '用户删除成功' };
         }
         
@@ -5604,13 +5614,17 @@ console.log('✅ GitHub部署系统已加载');
                 const urlParams = new URLSearchParams(window.location.search);
                 let fileId = urlParams.get('f');
 
+                // 如果没有文件ID，使用默认ID（本地测试时使用）
                 if (!fileId) {
-                    console.log('无法获取文件ID，跳过保存用户数据');
-                    return;
+                    fileId = 'default_users_data';
+                    console.log('使用默认文件ID:', fileId);
                 }
 
                 // 获取当前用户数据和小组数据
                 const users = getUsers();
+                console.log('准备保存用户数据到云端:', users.length, '个用户');
+                console.log('用户列表:', users.map(u => u.username));
+
                 const userDataToSave = {
                     users: users,
                     groups: groups,
@@ -5621,9 +5635,10 @@ console.log('✅ GitHub部署系统已加载');
                 // 上传到 OSS（使用独立的文件名）
                 const fileName = `s/${fileId}_users.json`;
                 const content = JSON.stringify(userDataToSave);
+                console.log('上传文件:', fileName);
                 await client.put(fileName, new Blob([content], { type: 'application/json' }));
 
-                console.log('用户数据已保存到云端');
+                console.log('用户数据已保存到云端:', fileName);
 
             } catch (error) {
                 console.error('保存用户数据到云端失败:', error);
@@ -5633,16 +5648,19 @@ console.log('✅ GitHub部署系统已加载');
         // 从云端加载用户数据
         async function loadUserDataFromCloud() {
             console.log('loadUserDataFromCloud 被调用');
+            sessionStorage.setItem('user_data_cloud_loaded', '尝试中');
 
             // 检查配置
             if (!OSS_CONFIG.accessKeyId || !OSS_CONFIG.accessKeySecret || !OSS_CONFIG.bucket) {
                 console.log('OSS未配置，跳过加载用户数据');
+                sessionStorage.setItem('user_data_cloud_loaded', 'OSS未配置');
                 return;
             }
 
             const client = await initOSS();
             if (!client) {
                 console.log('OSS初始化失败，跳过加载用户数据');
+                sessionStorage.setItem('user_data_cloud_loaded', 'OSS初始化失败');
                 return;
             }
 
@@ -5651,21 +5669,44 @@ console.log('✅ GitHub部署系统已加载');
                 const urlParams = new URLSearchParams(window.location.search);
                 let fileId = urlParams.get('f');
 
+                // 如果没有文件ID，使用默认ID（本地测试时使用）
                 if (!fileId) {
-                    console.log('无法获取文件ID，跳过加载用户数据');
-                    return;
+                    fileId = 'default_users_data';
+                    console.log('使用默认文件ID加载用户数据:', fileId);
                 }
+
+                console.log('正在从云端获取用户数据，文件ID:', fileId);
 
                 // 从 OSS 获取用户数据
                 const fileName = `s/${fileId}_users.json`;
                 const result = await client.get(fileName);
-                const cloudUserData = JSON.parse(result.content.toString());
+                const contentStr = result.content.toString();
+
+                // 检查返回的内容是否是HTML错误页面（文件不存在时返回HTML）
+                if (contentStr.trim().startsWith('<')) {
+                    console.log('云端返回HTML页面，文件不存在，使用本地数据');
+                    sessionStorage.setItem('user_data_cloud_loaded', '云端无数据(HTML)');
+                    return;
+                }
+
+                let cloudUserData;
+                try {
+                    cloudUserData = JSON.parse(contentStr);
+                } catch (parseError) {
+                    console.error('解析云端用户数据失败:', parseError);
+                    console.log('返回内容:', contentStr.substring(0, 100));
+                    sessionStorage.setItem('user_data_cloud_loaded', '解析失败');
+                    return;
+                }
 
                 if (cloudUserData) {
+                    console.log('获取到云端用户数据:', cloudUserData);
+
                     // 更新本地用户数据
                     if (cloudUserData.users && cloudUserData.users.length > 0) {
                         localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(cloudUserData.users));
                         console.log('已从云端加载用户数据:', cloudUserData.users.length, '个用户');
+                        console.log('用户列表:', cloudUserData.users.map(u => u.username));
                     }
 
                     // 更新本地小组数据
@@ -5683,7 +5724,8 @@ console.log('✅ GitHub部署系统已加载');
                     // 刷新用户列表和小组显示
                     updateGroupFilter();
                     renderGroupConfig();
-                    
+
+                    sessionStorage.setItem('user_data_cloud_loaded', '成功-' + cloudUserData.users.length + '个用户');
                     console.log('用户数据从云端同步完成');
                 }
 
@@ -5691,8 +5733,10 @@ console.log('✅ GitHub部署系统已加载');
                 // 如果文件不存在，说明还没有保存过用户数据，这是正常的
                 if (error.code === 'NoSuchKey') {
                     console.log('云端没有用户数据，使用本地数据');
+                    sessionStorage.setItem('user_data_cloud_loaded', '云端无数据');
                 } else {
                     console.error('从云端加载用户数据失败:', error);
+                    sessionStorage.setItem('user_data_cloud_loaded', '失败-' + error.message);
                 }
             }
         }
@@ -7051,7 +7095,15 @@ console.log('✅ GitHub部署系统已加载');
                 renderTable();
                 alert('登录成功！现在可以编辑数据了。');
             } else {
-                alert('用户名或密码错误！');
+                // 显示详细的调试信息
+                const localUsers = JSON.parse(localStorage.getItem(USER_STORAGE_KEY)) || [];
+                const cloudLoadStatus = sessionStorage.getItem('user_data_cloud_loaded') || '未尝试';
+                console.log('【登录失败调试】');
+                console.log('输入的用户名:', username);
+                console.log('本地用户列表:', localUsers.map(u => u.username));
+                console.log('云端数据加载状态:', cloudLoadStatus);
+                console.log('当前用户列表:', users.map(u => u.username));
+                alert('用户名或密码错误！\n\n调试信息（请按F12查看控制台）:\n- 本地用户数: ' + localUsers.length + '\n- 云端加载状态: ' + cloudLoadStatus + '\n- 当前总用户数: ' + users.length);
             }
         }
 
@@ -7157,6 +7209,26 @@ console.log('✅ GitHub部署系统已加载');
                 alert(result.message);
             }
         }
+
+        // 手动同步用户数据到云端
+        async function manualSyncUserDataToCloud() {
+            console.log('手动同步用户数据到云端...');
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '⏳ 同步中...';
+            btn.disabled = true;
+
+            try {
+                await saveUserDataToCloud();
+                alert('✅ 用户数据已同步到云端！');
+            } catch (error) {
+                console.error('同步失败:', error);
+                alert('❌ 同步失败: ' + error.message);
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
         
         // 添加新用户
         function addNewUserFromManagement() {
@@ -7203,57 +7275,12 @@ console.log('✅ GitHub部署系统已加载');
                         </tr>
                     </thead>
                     <tbody id="user-list-body">
-                <tr>
-                    <td>admin</td>
-                    <td>管理员</td>
-                    <td>
-                        <span style="color: #999;">系统账号</span>
-                    </td>
-                </tr>
-            
-                <tr>
-                    <td>于子凌</td>
-                    <td>普通用户</td>
-                    <td>
-                        <button onclick="deleteUserFromManagement('于子凌')" class="btn-delete" style="padding: 4px 8px; font-size: 12px;">删除</button>
-                    </td>
-                </tr>
-            
-                <tr>
-                    <td>孟伟朋</td>
-                    <td>普通用户</td>
-                    <td>
-                        <button onclick="deleteUserFromManagement('孟伟朋')" class="btn-delete" style="padding: 4px 8px; font-size: 12px;">删除</button>
-                    </td>
-                </tr>
-            
-                <tr>
-                    <td>张仕通</td>
-                    <td>普通用户</td>
-                    <td>
-                        <button onclick="deleteUserFromManagement('张仕通')" class="btn-delete" style="padding: 4px 8px; font-size: 12px;">删除</button>
-                    </td>
-                </tr>
-            
-                <tr>
-                    <td>李争光</td>
-                    <td>普通用户</td>
-                    <td>
-                        <button onclick="deleteUserFromManagement('李争光')" class="btn-delete" style="padding: 4px 8px; font-size: 12px;">删除</button>
-                    </td>
-                </tr>
-            
-                <tr>
-                    <td>张安文</td>
-                    <td>普通用户</td>
-                    <td>
-                        <button onclick="deleteUserFromManagement('张安文')" class="btn-delete" style="padding: 4px 8px; font-size: 12px;">删除</button>
-                    </td>
-                </tr>
-            </tbody>
+                        <!-- 动态生成用户列表 -->
+                    </tbody>
                 </table>
             </div>
             <div class="modal-buttons" style="margin-top: 20px;">
+                <button onclick="manualSyncUserDataToCloud()" class="btn-primary" style="background: #52c41a;">💾 同步用户数据到云端</button>
                 <button onclick="closeUserManagementModal()" class="btn-secondary">关闭</button>
             </div>
         </div>
