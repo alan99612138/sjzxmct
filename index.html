@@ -2177,8 +2177,8 @@ console.log('✅ GitHub部署系统已加载');
         let currentGroup = localStorage.getItem('currentGroup') || '';
         let groups = JSON.parse(localStorage.getItem('groups')) || [];
         
-        // 项目穿透数据
-        let penetrationData = JSON.parse(localStorage.getItem('penetrationData')) || {};
+        // 项目穿透数据 - 只使用云端存储，不使用本地存储
+        let penetrationData = {};
         let currentProjectId = null;
 
         // 获取项目穿透数据
@@ -4223,12 +4223,12 @@ console.log('✅ GitHub部署系统已加载');
                 originalExcelData = [...excelData];
                 filteredData = [...excelData];
                 
-                // 加载穿透数据
+                // 加载穿透数据 - 只使用云端数据，不使用本地数据
                 if (cloudData.penetrationData) {
                     penetrationData = cloudData.penetrationData;
-                    localStorage.setItem('penetrationData', JSON.stringify(penetrationData));
+                    console.log('已从云端加载穿透数据');
                 }
-                
+
                 // 渲染sheet标签
                 renderSheetTabs();
                 
@@ -4252,14 +4252,14 @@ console.log('✅ GitHub部署系统已加载');
                 allSheetsData = {};
                 currentSheetName = '';
 
-                // 加载穿透数据
+                // 加载穿透数据 - 只使用云端数据，不使用本地数据
                 if (cloudData.penetrationData) {
                     penetrationData = cloudData.penetrationData;
-                    localStorage.setItem('penetrationData', JSON.stringify(penetrationData));
+                    console.log('已从云端加载穿透数据');
                 }
 
                 filteredData = [...excelData];
-                
+
                 // 清空sheet标签
                 document.getElementById('sheet-tabs').innerHTML = '';
                 
@@ -5297,10 +5297,10 @@ console.log('✅ GitHub部署系统已加载');
             }
             
             penetrationData[currentProjectId].milestones = milestones;
-            
-            // 保存到本地存储
-            localStorage.setItem('penetrationData', JSON.stringify(penetrationData));
-            
+
+            // 自动同步到云端 - 只保存到云端，不保存到本地
+            autoSavePenetrationToCloud();
+
             // 更新样式
             updateMilestoneStyles();
             
@@ -5486,10 +5486,7 @@ console.log('✅ GitHub部署系统已加载');
                 }
             });
             
-            // 保存到本地存储
-            localStorage.setItem('penetrationData', JSON.stringify(penetrationData));
-
-            // 自动同步到云端（等待完成）
+            // 自动同步到云端（等待完成）- 只保存到云端，不保存到本地
             console.log('开始同步穿透数据到云端...');
             try {
                 await autoSavePenetrationToCloud();
@@ -5583,7 +5580,8 @@ console.log('✅ GitHub部署系统已加载');
             if (todo) {
                 todo.completed = !todo.completed;
                 todo.completedDate = todo.completed ? new Date().toISOString().split('T')[0] : null;
-                localStorage.setItem('penetrationData', JSON.stringify(penetrationData));
+                // 自动同步到云端 - 只保存到云端，不保存到本地
+                autoSavePenetrationToCloud();
                 renderPenetrationRecords();
             }
         }
@@ -5712,9 +5710,7 @@ console.log('✅ GitHub部署系统已加载');
                             };
                         }
 
-                        // 保存到本地存储
-                        localStorage.setItem('penetrationData', JSON.stringify(penetrationData));
-
+                        // 不保存到本地存储，只保存在内存中
                         console.log('穿透数据已从云端加载并合并（按项目编号）');
 
                         // 显示提示
@@ -6158,15 +6154,13 @@ console.log('✅ GitHub部署系统已加载');
             
             // 删除记录
             data.records = data.records.filter(r => r.id !== currentViewingRecordId);
-            
+
             // 同时删除关联的待办事项
             if (data.todos) {
                 data.todos = data.todos.filter(t => t.recordId !== currentViewingRecordId);
             }
-            
-            localStorage.setItem('penetrationData', JSON.stringify(penetrationData));
-            
-            // 自动同步到云端（删除后更新云端数据）
+
+            // 自动同步到云端（删除后更新云端数据）- 只保存到云端，不保存到本地
             autoSavePenetrationToCloud();
             
             closeRecordDetailModal();
