@@ -5867,6 +5867,9 @@ console.log('✅ GitHub部署系统已加载');
         // 按主项目编号保存穿透数据（用于跨文件共享）
         async function savePenetrationByProjectCode(client) {
             console.log('按主项目编号保存穿透数据...');
+            console.log('excelData行数:', excelData?.length);
+            console.log('penetrationData keys:', Object.keys(penetrationData));
+            console.log('headers:', headers);
 
             if (!excelData || excelData.length === 0 || !headers || headers.length === 0) {
                 console.log('没有Excel数据，跳过按项目编号保存');
@@ -5878,6 +5881,8 @@ console.log('✅ GitHub部署系统已加载');
                 h.includes('主项目编号') || h.includes('项目编号') || h.includes('项目号')
             );
 
+            console.log('主项目编号列:', projectCodeColumn);
+
             if (!projectCodeColumn) {
                 console.log('未找到主项目编号列，跳过按项目编号保存');
                 return;
@@ -5888,21 +5893,37 @@ console.log('✅ GitHub部署系统已加载');
                 const row = excelData[rowIndex];
                 const projectCode = row[projectCodeColumn];
 
-                if (!projectCode) continue;
+                console.log(`检查行 ${rowIndex}: 主项目编号 = ${projectCode}`);
+
+                if (!projectCode) {
+                    console.log(`行 ${rowIndex} 没有主项目编号，跳过`);
+                    continue;
+                }
 
                 const penetration = penetrationData[rowIndex];
-                if (!penetration) continue;
+                console.log(`行 ${rowIndex} 的穿透数据:`, penetration);
+
+                if (!penetration) {
+                    console.log(`行 ${rowIndex} 没有穿透数据，跳过`);
+                    continue;
+                }
 
                 // 检查是否有实际的穿透数据
                 const hasRecords = penetration.records && penetration.records.length > 0;
                 const hasTodos = penetration.todos && penetration.todos.length > 0;
                 const hasMilestones = penetration.milestones && Object.keys(penetration.milestones).length > 0;
 
-                if (!hasRecords && !hasTodos && !hasMilestones) continue;
+                console.log(`行 ${rowIndex} 检查: hasRecords=${hasRecords}, hasTodos=${hasTodos}, hasMilestones=${hasMilestones}`);
+
+                if (!hasRecords && !hasTodos && !hasMilestones) {
+                    console.log(`行 ${rowIndex} 没有实际的穿透数据，跳过`);
+                    continue;
+                }
 
                 try {
                     // 使用主项目编号作为文件名
                     const fileName = `p/${projectCode}.json`;
+                    console.log(`准备保存到: ${fileName}`);
 
                     // 准备数据
                     const dataToSave = {
@@ -5915,11 +5936,12 @@ console.log('✅ GitHub部署系统已加载');
 
                     // 上传到 OSS
                     const content = JSON.stringify(dataToSave);
+                    console.log(`上传内容长度: ${content.length}`);
                     await client.put(fileName, new Blob([content], { type: 'application/json' }));
 
-                    console.log(`穿透数据已按项目编号保存: ${projectCode}`);
+                    console.log(`✅ 穿透数据已按项目编号保存: ${projectCode}`);
                 } catch (error) {
-                    console.error(`保存项目 ${projectCode} 的穿透数据失败:`, error);
+                    console.error(`❌ 保存项目 ${projectCode} 的穿透数据失败:`, error);
                 }
             }
         }
