@@ -4081,7 +4081,12 @@ console.log('✅ GitHub部署系统已加载');
                     s: OSS_CONFIG.accessKeySecret
                 }));
 
-                const shareUrl = `${window.location.origin}${window.location.pathname}?f=${fileId}&s=${encodeURIComponent(signedUrl)}&c=${encodeURIComponent(ossConfigEncoded)}`;
+                // 使用GitHub Pages URL作为基础（支持本地和线上环境）
+                const baseUrl = GITHUB_CONFIG.owner && GITHUB_CONFIG.repo
+                    ? `https://${GITHUB_CONFIG.owner}.github.io/${GITHUB_CONFIG.repo}/`
+                    : 'https://alan99612138.github.io/sjzxmct/';
+
+                const shareUrl = `${baseUrl}?f=${fileId}&s=${encodeURIComponent(signedUrl)}&c=${encodeURIComponent(ossConfigEncoded)}`;
 
                 console.log('分享链接:', shareUrl, '长度:', shareUrl.length);
                 console.log('OSS配置已嵌入链接');
