@@ -5665,32 +5665,24 @@ console.log('✅ GitHub部署系统已加载');
                     const projectFileName = `p/${projectCode}.json`;
                     console.log('请求文件:', projectFileName);
 
-                    // 尝试使用签名URL访问
+                    // 直接使用签名URL获取文件
                     let content;
                     try {
-                        // 首先尝试直接获取
-                        const projectFileResult = await client.get(projectFileName);
-                        content = projectFileResult.content.toString();
-                    } catch (directError) {
-                        console.log('直接获取失败，尝试使用签名URL:', directError.message);
-                        console.log('错误详情:', directError);
-                        // 生成签名URL并获取
-                        try {
-                            const signedUrl = client.signatureUrl(projectFileName, {
-                                expires: 3600, // 1小时有效期
-                                method: 'GET'
-                            });
-                            console.log('签名URL:', signedUrl);
-                            const response = await fetch(signedUrl);
-                            console.log('签名URL响应状态:', response.status, response.statusText);
-                            if (!response.ok) {
-                                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                            }
-                            content = await response.text();
-                        } catch (signedUrlError) {
-                            console.error('签名URL获取也失败:', signedUrlError);
-                            throw signedUrlError;
+                        // 生成签名URL
+                        const signedUrl = client.signatureUrl(projectFileName, {
+                            expires: 3600, // 1小时有效期
+                            method: 'GET'
+                        });
+                        console.log('使用签名URL获取:', signedUrl);
+                        const response = await fetch(signedUrl);
+                        console.log('签名URL响应状态:', response.status, response.statusText);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                         }
+                        content = await response.text();
+                    } catch (fetchError) {
+                        console.error('签名URL获取失败:', fetchError);
+                        throw fetchError;
                     }
 
                     console.log('获取到文件内容，长度:', content.length);
