@@ -5828,35 +5828,35 @@ console.log('✅ GitHub部署系统已加载');
                 const urlParams = new URLSearchParams(window.location.search);
                 let fileId = urlParams.get('f');
 
-                if (!fileId) {
-                    console.log('无法获取文件ID，跳过自动保存');
-                    return;
+                // 如果有文件ID，保存到文件特定的位置
+                if (fileId) {
+                    // 先获取现有的云端数据
+                    const fileName = `s/${fileId}.json`;
+                    let existingData = {};
+                    try {
+                        const result = await client.get(fileName);
+                        existingData = JSON.parse(result.content.toString());
+                    } catch (e) {
+                        console.log('获取现有数据失败，将创建新数据:', e);
+                    }
+
+                    // 准备要保存的数据（保留原有Excel数据，更新穿透数据）
+                    const dataToSave = {
+                        ...existingData,
+                        penetrationData: penetrationData,
+                        penetrationSaveTime: new Date().toISOString()
+                    };
+
+                    // 上传到 OSS
+                    const content = JSON.stringify(dataToSave);
+                    await client.put(fileName, new Blob([content], { type: 'application/json' }));
+
+                    console.log('穿透数据自动同步到云端成功');
+                } else {
+                    console.log('无法获取文件ID，跳过文件特定保存，但仍会按项目编号保存');
                 }
 
-                // 先获取现有的云端数据
-                const fileName = `s/${fileId}.json`;
-                let existingData = {};
-                try {
-                    const result = await client.get(fileName);
-                    existingData = JSON.parse(result.content.toString());
-                } catch (e) {
-                    console.log('获取现有数据失败，将创建新数据:', e);
-                }
-
-                // 准备要保存的数据（保留原有Excel数据，更新穿透数据）
-                const dataToSave = {
-                    ...existingData,
-                    penetrationData: penetrationData,
-                    penetrationSaveTime: new Date().toISOString()
-                };
-
-                // 上传到 OSS
-                const content = JSON.stringify(dataToSave);
-                await client.put(fileName, new Blob([content], { type: 'application/json' }));
-
-                console.log('穿透数据自动同步到云端成功');
-
-                // 同时按主项目编号保存穿透数据（用于跨文件共享）
+                // 同时按主项目编号保存穿透数据（用于跨文件共享）- 无论是否有fileId都会执行
                 await savePenetrationByProjectCode(client);
 
             } catch (error) {
