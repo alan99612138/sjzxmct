@@ -3853,13 +3853,29 @@ console.log('✅ GitHub部署系统已加载');
             bucket: 'sjzxmct'
         };
 
+        // 获取本地存储的配置（如果存在且不为空）
+        function getLocalStorageConfig(key) {
+            const value = localStorage.getItem(key);
+            return value && value.trim() !== '' ? value : null;
+        }
+
         // 阿里云 OSS 配置（优先使用本地存储，如果没有则使用默认配置）
         let OSS_CONFIG = {
-            region: localStorage.getItem('oss_region') || DEFAULT_OSS_CONFIG.region,
-            accessKeyId: localStorage.getItem('oss_access_key_id') || DEFAULT_OSS_CONFIG.accessKeyId,
-            accessKeySecret: localStorage.getItem('oss_access_key_secret') || DEFAULT_OSS_CONFIG.accessKeySecret,
-            bucket: localStorage.getItem('oss_bucket') || DEFAULT_OSS_CONFIG.bucket
+            region: getLocalStorageConfig('oss_region') || DEFAULT_OSS_CONFIG.region,
+            accessKeyId: getLocalStorageConfig('oss_access_key_id') || DEFAULT_OSS_CONFIG.accessKeyId,
+            accessKeySecret: getLocalStorageConfig('oss_access_key_secret') || DEFAULT_OSS_CONFIG.accessKeySecret,
+            bucket: getLocalStorageConfig('oss_bucket') || DEFAULT_OSS_CONFIG.bucket
         };
+
+        // 将默认配置保存到本地存储（如果本地没有配置）
+        if (!getLocalStorageConfig('oss_access_key_id')) {
+            localStorage.setItem('oss_region', DEFAULT_OSS_CONFIG.region);
+            localStorage.setItem('oss_bucket', DEFAULT_OSS_CONFIG.bucket);
+            localStorage.setItem('oss_access_key_id', DEFAULT_OSS_CONFIG.accessKeyId);
+            localStorage.setItem('oss_access_key_secret', DEFAULT_OSS_CONFIG.accessKeySecret);
+            console.log('默认OSS配置已保存到本地存储');
+        }
+
         let ossClient = null;
         
         // 生成短链接
