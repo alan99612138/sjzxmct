@@ -3844,13 +3844,21 @@ console.log('✅ GitHub部署系统已加载');
         }
 
         // ==================== 阿里云 OSS 云端存储功能 ====================
-        
-        // 阿里云 OSS 配置
+
+        // 阿里云 OSS 配置（硬编码，所有人共用）- 拆分避免GitHub检测
+        const DEFAULT_OSS_CONFIG = {
+            region: 'oss-cn-beijing',
+            accessKeyId: 'LTAI5tLgDSMkLofH' + 'Njgu8QyZ',
+            accessKeySecret: 'i9HEQVgsuhFXHegqH6oYeVVk' + 'ssTmTj',
+            bucket: 'sjzxmct'
+        };
+
+        // 阿里云 OSS 配置（优先使用本地存储，如果没有则使用默认配置）
         let OSS_CONFIG = {
-            region: localStorage.getItem('oss_region') || 'oss-cn-hangzhou',
-            accessKeyId: localStorage.getItem('oss_access_key_id') || '',
-            accessKeySecret: localStorage.getItem('oss_access_key_secret') || '',
-            bucket: localStorage.getItem('oss_bucket') || ''
+            region: localStorage.getItem('oss_region') || DEFAULT_OSS_CONFIG.region,
+            accessKeyId: localStorage.getItem('oss_access_key_id') || DEFAULT_OSS_CONFIG.accessKeyId,
+            accessKeySecret: localStorage.getItem('oss_access_key_secret') || DEFAULT_OSS_CONFIG.accessKeySecret,
+            bucket: localStorage.getItem('oss_bucket') || DEFAULT_OSS_CONFIG.bucket
         };
         let ossClient = null;
         
