@@ -2298,7 +2298,7 @@ td[data-column*="金额"],
         <h1>交付四部项目全量信息管理系统</h1>
         <div class="nav-links">
             <button onclick="showPage('data')" class="active" id="btn-data">数据展示</button>
-            <button onclick="showPage('dashboard')" id="btn-dashboard" class="">数据看板</button>
+            <button onclick="showPage('dashboard')" id="btn-dashboard">数据看板</button>
             <button onclick="showGroupConfig()" id="btn-group" class="">小组配置</button>
         </div>
         <div class="user-info">
@@ -2706,15 +2706,15 @@ td[data-column*="金额"],
             <!-- 总体统计卡片 -->
             <div class="stat-grid">
                 <div class="stat-card" onclick="drillDownAllProjects()" title="点击查看全部项目">
-                    <h4 id="total-records">0</h4>
+                    <h4 id="total-records">45</h4>
                     <p>总项目数</p>
                 </div>
                 <div class="stat-card" onclick="drillDownContractAmount()" title="点击查看有合同金额的项目">
-                    <h4 id="total-amount">0.00</h4>
+                    <h4 id="total-amount">1540.88万</h4>
                     <p>合同总金额</p>
                 </div>
                 <div class="stat-card" onclick="drillDownPendingAmount()" title="点击查看有待收款的项目">
-                    <h4 id="pending-amount">0.00</h4>
+                    <h4 id="pending-amount">46.35万</h4>
                     <p>待收款金额</p>
                 </div>
             </div>
@@ -2752,7 +2752,8 @@ td[data-column*="金额"],
                                 <th>验收阶段</th>
                             </tr>
                         </thead>
-                        <tbody id="manager-stats-body"><tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--text-muted);">该小组暂无项目数据</td></tr></tbody>
+                        <tbody id="manager-stats-body">
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -2762,13 +2763,13 @@ td[data-column*="金额"],
                 <div class="dashboard-card">
                     <h3>项目阶段分布</h3>
                     <div class="chart-container">
-                        <canvas id="stage-chart" height="405" style="display: block; box-sizing: border-box; height: 300px; width: 652.5px;" width="880"></canvas>
+                        <canvas id="stage-chart" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
                     </div>
                 </div>
                 <div class="dashboard-card">
                     <h3>项目经理待办事项TOP10</h3>
                     <div class="chart-container">
-                        <canvas id="manager-chart" height="405" style="display: block; box-sizing: border-box; height: 300px; width: 652.5px;" width="880"></canvas>
+                        <canvas id="manager-chart" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
                     </div>
                 </div>
             </div>
@@ -6160,7 +6161,8 @@ td[data-column*="金额"],
                 };
                 
                 const content = JSON.stringify(dataToSave);
-                
+                const _encoder = new TextEncoder();
+
                 // 同时保存文件索引信息（用于列表查询）
                 const indexData = {
                     fileId: fileId,
@@ -6171,10 +6173,14 @@ td[data-column*="金额"],
                     sheetCount: Object.keys(allSheetsData).length
                 };
                 const indexFileName = `index/${fileId}.json`;
-                await client.put(indexFileName, new Blob([JSON.stringify(indexData)], { type: 'application/json' }));
-                
+                await client.put(indexFileName, _encoder.encode(JSON.stringify(indexData)), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
                 // 上传文件（私有权限）
-                const result = await client.put(fileName, new Blob([content], { type: 'application/json' }));
+                const result = await client.put(fileName, _encoder.encode(content), {
+                    headers: { 'Content-Type': 'application/json' }
+                });
                 
                 // 尝试设置公共读权限（如果失败则使用签名URL）
                 let isPublic = false;
@@ -6596,7 +6602,8 @@ td[data-column*="金额"],
                 // 上传到 OSS
                 const fileName = `s/${fileId}_config.json`;
                 const content = JSON.stringify(configData);
-                await client.put(fileName, new Blob([content], { type: 'application/json' }));
+                const _enc = new TextEncoder();
+                await client.put(fileName, _enc.encode(content), { headers: { 'Content-Type': 'application/json' } });
 
                 console.log('云端配置已保存到:', fileName);
 
@@ -7472,24 +7479,16 @@ td[data-column*="金额"],
         // 从云端加载节点备案数据
         async function loadMilestonesFromCloudByProjectCode(projectCode) {
             if (!projectCode) return null;
-            
-            // 检查OSS配置
-            if (!OSS_CONFIG.accessKeyId || !OSS_CONFIG.accessKeySecret || !OSS_CONFIG.bucket) {
-                console.log('未配置云端存储，无法加载节点备案数据');
-                return null;
-            }
-            
+
             try {
                 console.log('从云端加载节点备案数据，项目编号:', projectCode);
-                
-                // 创建OSS客户端
-                const client = new OSS({
-                    region: OSS_CONFIG.region,
-                    bucket: OSS_CONFIG.bucket,
-                    accessKeyId: OSS_CONFIG.accessKeyId,
-                    accessKeySecret: OSS_CONFIG.accessKeySecret,
-                    secure: true
-                });
+
+                // 使用共享的OSS客户端
+                const client = await initOSS();
+                if (!client) {
+                    console.log('未配置云端存储，无法加载节点备案数据');
+                    return null;
+                }
                 
                 // 节点备案数据存储在 m/ 目录下，以项目编号为文件名
                 const milestoneFileName = `m/${projectCode}.json`;
@@ -7557,7 +7556,13 @@ td[data-column*="金额"],
             console.log('保存节点备案按钮被点击');
             saveMilestones().catch(error => {
                 console.error('保存节点备案失败:', error);
-                alert('❌ 保存节点备案失败: ' + error.message);
+                const details = [
+                    error.code ? '错误码: ' + error.code : '',
+                    error.status ? '状态: ' + error.status : '',
+                    error.requestId ? '请求ID: ' + error.requestId : '',
+                    '信息: ' + error.message
+                ].filter(Boolean).join('\n');
+                alert('❌ 保存节点备案失败:\n\n' + details + '\n\n请检查:\n1. 系统时间是否准确（时间偏差会导致签名失败）\n2. 浏览器控制台(F12)查看详细错误\n3. 尝试刷新页面后重试');
             });
         }
         
@@ -7630,6 +7635,13 @@ td[data-column*="金额"],
             // 自动同步到云端 - 保存节点备案到专门的目录
             await saveMilestonesToCloud(projectCode, milestones);
 
+            // 同步穿透数据到主云端文件，确保其他人加载主数据时也能获取最新节点备案
+            try {
+                await autoSavePenetrationToCloud();
+            } catch (syncErr) {
+                console.warn('节点备案同步穿透数据到主文件失败（不影响节点备案保存）:', syncErr);
+            }
+
             // 更新样式
             updateMilestoneStyles();
             
@@ -7646,29 +7658,21 @@ td[data-column*="金额"],
                 console.log('没有项目编号，无法保存节点备案到云端');
                 return;
             }
-            
-            // 检查OSS配置
-            if (!OSS_CONFIG.accessKeyId || !OSS_CONFIG.accessKeySecret || !OSS_CONFIG.bucket) {
-                console.log('未配置云端存储，无法保存节点备案');
-                return;
-            }
-            
+
             try {
                 console.log('保存节点备案到云端，项目编号:', projectCode);
-                
-                // 创建OSS客户端
-                const client = new OSS({
-                    region: OSS_CONFIG.region,
-                    bucket: OSS_CONFIG.bucket,
-                    accessKeyId: OSS_CONFIG.accessKeyId,
-                    accessKeySecret: OSS_CONFIG.accessKeySecret,
-                    secure: true
-                });
-                
+
+                // 使用共享的OSS客户端（与穿透数据保存一致）
+                const client = await initOSS();
+                if (!client) {
+                    console.log('未配置云端存储，无法保存节点备案');
+                    return;
+                }
+
                 // 节点备案数据存储在 m/ 目录下
                 const milestoneFileName = `m/${projectCode}.json`;
                 console.log('保存到文件:', milestoneFileName);
-                
+
                 // 准备数据
                 const dataToSave = {
                     projectCode: projectCode,
@@ -7676,16 +7680,28 @@ td[data-column*="金额"],
                     saveTime: new Date().toISOString(),
                     savedBy: localStorage.getItem('currentUser') || '未知用户'
                 };
-                
-                // 上传到 OSS
+
+                // 上传到 OSS（使用 Uint8Array 避免 Blob 签名计算问题）
                 const content = JSON.stringify(dataToSave);
-                await client.put(milestoneFileName, new Blob([content], { type: 'application/json' }));
-                
+                const encoder = new TextEncoder();
+                const uint8Array = encoder.encode(content);
+                console.log('[节点备案上传] 数据大小:', uint8Array.length, '字节');
+                await client.put(milestoneFileName, uint8Array, {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
                 console.log('✅ 节点备案已保存到云端:', projectCode);
-                
+
             } catch (error) {
                 console.error('❌ 保存节点备案到云端失败:', error);
-                alert('❌ 节点备案保存到云端失败: ' + error.message);
+                console.error('[详细错误]', {
+                    name: error.name,
+                    code: error.code,
+                    status: error.status,
+                    message: error.message,
+                    requestId: error.requestId
+                });
+                throw error;
             }
         }
         
@@ -8250,7 +8266,8 @@ td[data-column*="金额"],
 
                     // 上传到 OSS
                     const content = JSON.stringify(dataToSave);
-                    await client.put(fileName, new Blob([content], { type: 'application/json' }));
+                    const _enc = new TextEncoder();
+                    await client.put(fileName, _enc.encode(content), { headers: { 'Content-Type': 'application/json' } });
 
                     console.log('穿透数据自动同步到云端成功');
                 } else {
@@ -8338,7 +8355,8 @@ td[data-column*="金额"],
                     // 上传到 OSS
                     const content = JSON.stringify(dataToSave);
                     console.log(`上传内容长度: ${content.length}`);
-                    await client.put(fileName, new Blob([content], { type: 'application/json' }));
+                    const _enc = new TextEncoder();
+                    await client.put(fileName, _enc.encode(content), { headers: { 'Content-Type': 'application/json' } });
 
                     console.log(`✅ 穿透数据已按项目编号保存: ${projectCode}`);
                 } catch (error) {
@@ -8390,7 +8408,8 @@ td[data-column*="金额"],
                 const fileName = `s/${fileId}_users.json`;
                 const content = JSON.stringify(userDataToSave);
                 console.log('上传文件:', fileName);
-                await client.put(fileName, new Blob([content], { type: 'application/json' }));
+                const _enc = new TextEncoder();
+                await client.put(fileName, _enc.encode(content), { headers: { 'Content-Type': 'application/json' } });
 
                 console.log('用户数据已保存到云端:', fileName);
 
@@ -10077,19 +10096,12 @@ td[data-column*="金额"],
 
         // 从OSS批量加载所有项目的里程碑数据
         async function loadAllMilestonesFromCloud() {
-            if (!OSS_CONFIG.accessKeyId || !OSS_CONFIG.accessKeySecret || !OSS_CONFIG.bucket) {
-                console.log('未配置云端存储，无法加载里程碑数据');
-                return {};
-            }
-
             try {
-                const client = new OSS({
-                    region: OSS_CONFIG.region,
-                    bucket: OSS_CONFIG.bucket,
-                    accessKeyId: OSS_CONFIG.accessKeyId,
-                    accessKeySecret: OSS_CONFIG.accessKeySecret,
-                    secure: true
-                });
+                const client = await initOSS();
+                if (!client) {
+                    console.log('未配置云端存储，无法加载里程碑数据');
+                    return {};
+                }
 
                 // 列出 m/ 目录下所有JSON文件
                 const result = await client.list({ prefix: 'm/', 'max-keys': 500 });
@@ -10674,4 +10686,4 @@ td[data-column*="金额"],
     </div>
 </div>
 
-</body></html>
+<input type="file" accept=".xlsx,.xls" style="display: none;"></body></html>
