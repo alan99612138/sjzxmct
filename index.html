@@ -7,6 +7,7 @@
     <title>交付四部项目全量信息管理系统</title>
     <!-- 使用 xlsx-style 版本以支持样式和颜色读取 -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx-style@0.8.13/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- 阿里云 OSS SDK -->
     <script src="https://gosspublic.alicdn.com/aliyun-oss-sdk-6.18.0.min.js"></script>
@@ -69,8 +70,8 @@ window.showGitHubConfig = function() {
                 <input type="text" id="github-branch" value="${GITHUB_CONFIG.branch}" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-input); color: var(--text-primary); box-sizing: border-box;">
             </div>
             <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button onclick="document.getElementById('github-config-modal').remove()" style="padding: 10px 20px; background: #f8fafc; color: var(--text-secondary); border: 1px solid #e2e8f0; border-radius: 5px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">取消</button>
-                <button onclick="saveGitHubConfig()" style="padding: 10px 20px; background: #f8faff; color: var(--primary); border: 1px solid #c7d8ff; border-radius: 5px; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.06);" onmouseover="this.style.background='var(--primary)';this.style.color='#fff'" onmouseout="this.style.background='#f8faff';this.style.color='var(--primary)'">保存</button>
+                <button onclick="document.getElementById('github-config-modal').remove()" style="padding: 10px 20px; background: var(--bg-input); color: var(--text-secondary); border: 1px solid var(--border); border-radius: 5px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background='var(--bg-input)'">取消</button>
+                <button onclick="saveGitHubConfig()" style="padding: 10px 20px; background: var(--primary-lighter); color: var(--primary); border: 1px solid var(--border); border-radius: 5px; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.06);" onmouseover="this.style.background='var(--primary)';this.style.color='#fff'" onmouseout="this.style.background='var(--primary-lighter)';this.style.color='var(--primary)'">保存</button>
             </div>
         </div>
     `;
@@ -115,7 +116,7 @@ function showGitHubDeployProgress(message, percent) {
     
     progressDiv.innerHTML = `
         <div style="margin-bottom: 15px; color: var(--text-primary);">${message}</div>
-        <div style="width: 100%; height: 20px; background: #f1f5f9; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0;">
+        <div style="width: 100%; height: 20px; background: var(--bg-input); border-radius: 10px; overflow: hidden; border: 1px solid var(--border);">
             <div style="width: ${percent}%; height: 100%; background: linear-gradient(90deg, var(--primary), #4096ff); transition: width 0.3s;"></div>
         </div>
         <div style="margin-top: 10px; color: var(--primary);">${percent}%</div>
@@ -244,7 +245,7 @@ function showGitHubDeploySuccess(result) {
     
     modal.innerHTML = `
         <div style="background: var(--bg-card); padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow-glow);">
-            <h2 style="color: #15803d; margin-bottom: 20px;">✅ 部署成功！</h2>
+            <h2 style="color: var(--accent-green); margin-bottom: 20px;">✅ 部署成功！</h2>
             <p style="margin-bottom: 15px; color: var(--text-primary);">您的系统已成功部署到GitHub Pages</p>
             <p style="margin-bottom: 20px; word-break: break-all; background: var(--bg-input); padding: 10px; border-radius: 5px; border: 1px solid var(--border);">
                 <a href="${result.url}" target="_blank" style="color: var(--primary);">${result.url}</a>
@@ -252,7 +253,7 @@ function showGitHubDeploySuccess(result) {
             <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 20px;">
                 注意：GitHub Pages可能需要几分钟才能生效
             </p>
-            <button onclick="document.getElementById('github-deploy-success-modal').remove(); hideGitHubDeployProgress();" style="padding: 10px 30px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; border-radius: 5px; cursor: pointer; transition: all 0.2s;">关闭</button>
+            <button onclick="document.getElementById('github-deploy-success-modal').remove(); hideGitHubDeployProgress();" style="padding: 10px 30px; background: var(--bg-card); color: var(--accent-green); border: 1px solid var(--border); border-radius: 5px; cursor: pointer; transition: all 0.2s;">关闭</button>
         </div>
     `;
     
@@ -271,46 +272,37 @@ console.log('✅ GitHub部署系统已加载');
 // github-deploy.js 内容结束
     </script>
     <style>
-        :root {
-            /* 主色调 - 蓝色 */
+:root {
             --primary: #1677ff;
             --primary-hover: #4096ff;
             --primary-active: #0958d9;
-            --primary-light: rgba(22, 119, 255, 0.12);
-            --primary-lighter: rgba(22, 119, 255, 0.06);
-            --primary-glow: rgba(22, 119, 255, 0.25);
-            
-            /* 白色背景体系 */
-            --bg-page: #f0f2f5;
-            --bg-page-gradient: #f0f2f5;
+            --primary-light: rgba(22, 119, 255, 0.08);
+            --primary-lighter: rgba(22, 119, 255, 0.04);
+            --primary-glow: rgba(22, 119, 255, 0.15);
+
+            --bg-page: #f5f6f9;
             --bg-card: #ffffff;
-            --bg-card-hover: #fafafa;
-            --bg-glass: rgba(255, 255, 255, 0.9);
-            --bg-input: #ffffff;
-            
-            /* 边框体系 */
-            --border: #e2e8f0;
-            --border-light: #f1f5f9;
-            --border-glow: rgba(22, 119, 255, 0.4);
-            
-            /* 文字体系 */
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
-            --text-muted: #94a3b8;
-            --text-glow: #1677ff;
-            
-            /* 阴影体系 */
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.08);
-            --shadow-glow: 0 4px 16px rgba(22, 119, 255, 0.2);
-            
-            /* 圆角 */
+            --bg-card-hover: #f9fafb;
+            --bg-input: #f9fafb;
+            --bg-glass: rgba(255, 255, 255, 0.96);
+
+            --border: #e5e7eb;
+            --border-light: #f0f1f3;
+            --border-glow: rgba(22, 119, 255, 0.35);
+
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 6px 20px rgba(0, 0, 0, 0.08);
+            --shadow-glow: 0 2px 12px rgba(22, 119, 255, 0.12);
+
             --radius-sm: 6px;
             --radius-md: 10px;
             --radius-lg: 14px;
-            
-            /* 辅助色 */
+
             --accent-cyan: #06b6d4;
             --accent-purple: #7c3aed;
             --accent-green: #10b981;
@@ -318,107 +310,85 @@ console.log('✅ GitHub部署系统已加载');
             --accent-red: #ef4444;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif;
-            background: var(--bg-page-gradient);
+            background: var(--bg-page);
             min-height: 100vh;
             color: var(--text-primary);
-            position: relative;
-        }
-        
-        /* 白色主题无背景特效 */
-        body::before {
-            display: none;
-        }
-        
-        body::after {
-            display: none;
         }
 
-        /* ========== 顶部导航栏 - 白色主题 ========== */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
         .navbar {
             background: #ffffff;
             padding: 0 2rem;
-            height: 64px;
+            height: 60px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
             position: sticky;
             top: 0;
             z-index: 1000;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .navbar::before {
-            display: none;
+            border-bottom: 1px solid var(--border);
         }
 
         .navbar h1 {
             color: var(--text-primary);
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             font-weight: 700;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .navbar h1::before {
             content: '';
             display: inline-block;
-            width: 4px;
-            height: 22px;
-            background: linear-gradient(180deg, var(--primary) 0%, #4096ff 100%);
+            width: 3px;
+            height: 20px;
+            background: var(--primary);
             border-radius: 2px;
         }
 
         .nav-links {
             display: flex;
-            gap: 4px;
-            background: #f1f5f9;
-            padding: 4px;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
+            gap: 2px;
+            background: #f3f4f6;
+            padding: 3px;
+            border-radius: 8px;
+            border: 1px solid var(--border-light);
         }
 
         .nav-links button {
-            padding: 0.45rem 1.2rem;
+            padding: 0.4rem 1rem;
             border: 1px solid transparent;
             background: transparent;
             color: var(--text-secondary);
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 13.5px;
+            font-size: 13px;
             font-weight: 500;
-            position: relative;
-            overflow: hidden;
         }
 
         .nav-links button:hover {
             background: #ffffff;
             color: var(--primary);
-            border-color: #e2e8f0;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
         }
 
         .nav-links button.active {
             background: #ffffff;
             color: var(--primary);
-            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
             font-weight: 600;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .nav-links button.active::before {
-            display: none;
         }
 
         .user-info {
@@ -429,167 +399,88 @@ console.log('✅ GitHub部署系统已加载');
 
         .user-info span {
             color: var(--text-secondary);
-            font-size: 13.5px;
+            font-size: 13px;
         }
 
         .container {
             max-width: 1440px;
-            margin: 1.25rem auto;
-            padding: 0 1.25rem;
+            margin: 1rem auto;
+            padding: 0 1rem;
         }
 
-        .page {
-            display: none;
-        }
+        .page { display: none; }
+        .page.active { display: block; }
 
-        .page.active {
-            display: block;
-        }
-
-        .search-bar {
+.search-bar {
             background: var(--bg-card);
-            padding: 14px 18px;
+            padding: 10px 16px;
             border-radius: var(--radius-md);
             margin-bottom: 1rem;
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-sm);
             border: 1px solid var(--border);
-            position: relative;
-            overflow: visible;
-        }
-        
-        .search-bar::before {
-            display: none;
-        }
-
-        .search-bar h2 {
-            color: var(--primary);
-            margin-bottom: 1rem;
-        }
-
-        .search-inputs {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-
-        .search-inputs input,
-        .search-inputs select {
-            padding: 0.6rem 0.9rem;
-            border: 1px solid #e2e8f0;
-            border-radius: var(--radius-sm);
-            font-size: 0.9rem;
-            transition: all 0.3s;
-            background: #ffffff;
-            color: var(--text-primary);
-        }
-
-        .search-inputs input:focus,
-        .search-inputs select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.1);
         }
 
         .search-buttons {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
             align-items: center;
         }
 
-        .search-buttons button {
-            flex: 0 0 auto;
-            padding: 0.55rem 1.2rem;
-            border: none;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-
-        /* ========== 按钮体系 - 白色主题 ========== */
         .btn-primary, .btn-secondary, .btn-success, .btn-warning, .btn-info, .btn-danger {
-            background: #f8faff;
-            color: var(--primary);
-            border: 1px solid #c7d8ff;
-            min-width: 88px;
-            padding: 7px 16px;
+            padding: 6px 14px;
             font-size: 13px;
             border-radius: var(--radius-sm);
             cursor: pointer;
             transition: all 0.2s;
             white-space: nowrap;
             font-weight: 500;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn-primary::before, .btn-secondary::before, .btn-success::before, .btn-warning::before, .btn-info::before, .btn-danger::before {
-            display: none;
-        }
-        
-        .btn-primary:hover::before, .btn-secondary:hover::before, .btn-success:hover::before, .btn-warning:hover::before, .btn-info:hover::before, .btn-danger:hover::before {
-            display: none;
+            background: #ffffff;
+            color: var(--primary);
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
         }
 
-        .btn-primary:hover, .btn-secondary:hover, .btn-success:hover, .btn-warning:hover, .btn-info:hover, .btn-danger:hover {
+.btn-primary:hover, .btn-secondary:hover, .btn-success:hover, .btn-warning:hover, .btn-info:hover, .btn-danger:hover {
             background: var(--primary);
             color: #ffffff;
-            box-shadow: 0 2px 8px rgba(22, 119, 255, 0.3);
-            transform: translateY(-1px);
             border-color: var(--primary);
-        }
-
-        .btn-primary:active, .btn-secondary:active {
-            transform: translateY(0);
-            box-shadow: 0 1px 3px rgba(22, 119, 255, 0.2);
-        }
-
-        /* 特殊按钮 - 表格头部批量删除 */
-        .table-header-actions .btn-batch-delete {
-            background: #fff5f5 !important;
-            color: var(--accent-red) !important;
-            border: 1px solid #fecaca !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
-            padding: 5px 14px !important;
-            font-size: 12px !important;
-        }
-
-        .table-header-actions .btn-batch-delete:hover {
-            background: var(--accent-red) !important;
-            color: #ffffff !important;
-            border-color: var(--accent-red) !important;
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3) !important;
+            box-shadow: 0 2px 6px rgba(22, 119, 255, 0.25);
             transform: translateY(-1px);
         }
 
-        /* ========== 数据表格区域 ========== */
+        .btn-secondary:hover {
+            background: var(--text-secondary);
+            border-color: var(--text-secondary);
+            box-shadow: 0 2px 6px rgba(107, 114, 128, 0.25);
+        }
+
+        .btn-secondary {
+            background: #ffffff;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-primary:active, .btn-secondary:active, .btn-success:active, .btn-warning:active, .btn-info:active, .btn-danger:active {
+            transform: translateY(0) scale(0.97);
+            box-shadow: 0 1px 2px rgba(22, 119, 255, 0.15);
+        }
+
         .data-table {
             background: var(--bg-card);
             border-radius: var(--radius-md);
             overflow: hidden;
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-sm);
             border: 1px solid var(--border);
-            position: relative;
-        }
-        
-        .data-table::before {
-            display: none;
-        }
-        
-        .data-table::after {
-            display: none;
         }
 
         .table-header {
             background: #ffffff;
-            color: var(--text-primary);
-            padding: 14px 18px;
+            padding: 12px 16px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            border-bottom: 1px solid #e2e8f0;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
         }
 
         .table-header-top {
@@ -602,56 +493,45 @@ console.log('✅ GitHub部署系统已加载');
             font-size: 14px;
             font-weight: 700;
             color: var(--text-primary);
-            letter-spacing: 0.3px;
-            padding-right: 16px;
-            border-right: 2px solid #e2e8f0;
+            padding-right: 14px;
+            border-right: 2px solid var(--border-light);
         }
 
         .table-header-actions {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
 
         .table-header-actions .btn-primary {
-            padding: 5px 14px;
+            padding: 4px 12px;
             font-size: 12px;
-            min-width: auto;
             border-radius: 5px;
-            background: #f8faff;
+            background: #ffffff;
             color: var(--primary);
-            border: 1px solid #c7d8ff;
+            border: 1px solid var(--border);
+            box-shadow: none;
             cursor: pointer;
-            white-space: nowrap;
-            font-weight: 500;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-            transition: all 0.2s;
         }
 
         .table-header-actions .btn-primary:hover {
             background: var(--primary);
             color: #ffffff;
             border-color: var(--primary);
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(22, 119, 255, 0.3);
         }
 
         .table-header-actions .record-count-text {
             font-size: 12px;
             color: var(--primary);
             margin-left: 4px;
-            white-space: nowrap;
-            background: #f0f6ff;
-            padding: 4px 12px;
+            background: #eef3ff;
+            padding: 3px 10px;
             border-radius: 10px;
             border: 1px solid #c7d8ff;
             font-weight: 500;
         }
 
-        .table-header h2 {
-            margin: 0;
-            display: none;
-        }
+        .table-header h2 { display: none; }
 
         .table-container {
             overflow: auto;
@@ -665,129 +545,63 @@ console.log('✅ GitHub部署系统已加载');
             font-size: 13px;
         }
 
-        /* 列宽拖动手柄样式 */
-        .column-resizer {
-            position: absolute;
-            right: -6px;
-            top: 0;
-            bottom: 0;
-            width: 14px;
-            cursor: col-resize;
-            background: transparent;
-            z-index: 100;
-        }
-
-        .column-resizer:hover {
-            background: rgba(22, 119, 255, 0.1);
-        }
-
-        .column-resizer::before {
-            content: '';
-            position: absolute;
-            right: 4px;
-            top: 20%;
-            bottom: 20%;
-            width: 2px;
-            background: #e2e8f0;
-        }
-
-        .column-resizer:hover::before {
-            background: var(--primary);
-            width: 2px;
-        }
-
-        .column-resizer.dragging {
-            background: rgba(22, 119, 255, 0.15);
-        }
-
-        .column-resizer.dragging::before {
-            background: var(--primary);
-            width: 2px;
-        }
-
         th, td {
-            padding: 0.4rem 0.65rem;
+            padding: 0.35rem 0.6rem;
             text-align: left;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border-light);
             white-space: nowrap;
         }
 
         th {
-            background: #f8fafc;
+            background: #fafbfc;
             font-weight: 600;
             color: var(--primary);
             font-size: 12px;
-            padding: 0.35rem 0.55rem;
             vertical-align: top;
-            border-bottom: 1px solid #e2e8f0;
-            border-right: 1px solid #e2e8f0;
+            border-right: 1px solid var(--border-light);
         }
 
-        /* 分组表头（colspan）行特殊处理 */
         thead tr:first-child th {
-            background: #eef3ff;
+            background: #f0f4ff;
             color: var(--primary);
             font-size: 12px;
             font-weight: 700;
             text-align: center;
             border-bottom: 1px solid #c7d8ff;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
         }
 
-        /* 表头固定在顶部 */
         thead {
             position: sticky;
             top: 0;
             z-index: 10;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
         }
 
         .header-content {
             cursor: pointer;
-            padding: 3px;
+            padding: 2px;
             border-radius: 3px;
-            margin-bottom: 4px;
-            min-height: 18px;
+            margin-bottom: 3px;
+            min-height: 16px;
             color: var(--text-primary);
             font-weight: 600;
         }
 
         .header-content:hover {
-            background: #f0f6ff;
+            background: #eef3ff;
             color: var(--primary);
         }
 
-        .header-filter {
-            margin-top: 4px;
-            position: relative;
-        }
+        .header-filter { margin-top: 3px; position: relative; }
 
-        .column-filter-select {
-            width: 100%;
-            padding: 2px 4px;
-            font-size: 11px;
-            border: 1px solid #e2e8f0;
-            border-radius: 3px;
-            background: #ffffff;
-            color: var(--text-primary);
-            cursor: pointer;
-        }
-
-        .column-filter-select:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        /* 自定义筛选下拉框样式 */
-        .custom-filter-dropdown {
-            position: relative;
-            width: 100%;
-        }
+        .custom-filter-dropdown { position: relative; width: 100%; }
 
         .custom-filter-trigger {
             width: 100%;
-            padding: 3px 8px;
+            padding: 2px 6px;
             font-size: 11px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border);
             border-radius: 4px;
             background: #ffffff;
             color: var(--text-secondary);
@@ -798,6 +612,7 @@ console.log('✅ GitHub部署系统已加载');
             text-overflow: ellipsis;
             transition: all 0.15s;
         }
+
         .custom-filter-trigger:hover {
             border-color: var(--primary);
             background: #f0f6ff;
@@ -809,7 +624,7 @@ console.log('✅ GitHub部署系统已加载');
             max-width: 300px;
             max-height: 300px;
             background: #ffffff;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border);
             border-radius: var(--radius-sm);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
             z-index: 10000;
@@ -817,19 +632,17 @@ console.log('✅ GitHub部署系统已加载');
             flex-direction: column;
         }
 
-        .custom-filter-panel.active {
-            display: flex;
-        }
+        .custom-filter-panel.active { display: flex; }
 
         .custom-filter-search {
             padding: 8px;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid var(--border-light);
         }
 
         .custom-filter-search input {
             width: 100%;
-            padding: 6px 8px;
-            border: 1px solid #e2e8f0;
+            padding: 5px 8px;
+            border: 1px solid var(--border);
             border-radius: 4px;
             font-size: 12px;
             box-sizing: border-box;
@@ -840,7 +653,7 @@ console.log('✅ GitHub部署系统已加载');
         .custom-filter-search input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.1);
+            box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
         }
 
         .custom-filter-options {
@@ -850,7 +663,7 @@ console.log('✅ GitHub部署系统已加载');
         }
 
         .custom-filter-option {
-            padding: 6px 12px;
+            padding: 5px 10px;
             cursor: pointer;
             font-size: 12px;
             white-space: nowrap;
@@ -866,35 +679,27 @@ console.log('✅ GitHub部署系统已加载');
         }
 
         .custom-filter-option.selected {
-            background: #f0f6ff;
+            background: #eef3ff;
             color: var(--primary);
             font-weight: 600;
         }
 
-        tr:hover {
-            background: #f0f6ff !important;
-        }
-
-        tr:nth-child(even) {
-            background: #fafbfc;
-        }
+tr:hover { background: #eef3ff !important; }
+        tr:nth-child(even) { background: #fafbfc; }
+        tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--primary); }
 
         .editable-cell {
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.15s;
+            position: relative;
         }
 
-        .editable-cell:hover {
-            background: #f0f6ff !important;
-        }
-
-        .editable-cell.editing {
-            background: #e8f0fe;
-        }
+        .editable-cell:hover { background: #f0f6ff !important; }
+        .editable-cell.editing { background: #e8f0fe; }
 
         .editable-cell input {
             width: 100%;
-            padding: 0.45rem 0.6rem;
+            padding: 0.4rem 0.5rem;
             border: 2px solid var(--primary);
             border-radius: 4px;
             font-size: 13px;
@@ -905,15 +710,15 @@ console.log('✅ GitHub部署系统已加载');
 
         .action-buttons {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.4rem;
         }
 
         .action-buttons button {
-            padding: 0.22rem 0.5rem;
+            padding: 0.2rem 0.45rem;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             transition: all 0.15s;
         }
 
@@ -925,7 +730,7 @@ console.log('✅ GitHub部署系统已加载');
 
         .btn-edit:hover {
             background: #fef3c7;
-            box-shadow: 0 1px 4px rgba(180, 83, 9, 0.2);
+            box-shadow: 0 1px 3px rgba(180, 83, 9, 0.15);
         }
 
         .btn-save {
@@ -936,7 +741,7 @@ console.log('✅ GitHub部署系统已加载');
 
         .btn-save:hover {
             background: #dcfce7;
-            box-shadow: 0 1px 4px rgba(21, 128, 61, 0.2);
+            box-shadow: 0 1px 3px rgba(21, 128, 61, 0.15);
         }
 
         .btn-delete {
@@ -947,20 +752,20 @@ console.log('✅ GitHub部署系统已加载');
 
         .btn-delete:hover {
             background: #fee2e2;
-            box-shadow: 0 1px 4px rgba(239, 68, 68, 0.2);
+            box-shadow: 0 1px 3px rgba(239, 68, 68, 0.15);
         }
 
         .btn-batch-delete {
             background: #fff5f5;
             color: var(--accent-red);
-            padding: 7px 16px;
+            padding: 6px 14px;
             border: 1px solid #fecaca;
             border-radius: var(--radius-sm);
             cursor: pointer;
             font-size: 13px;
-            margin-left: 8px;
+            margin-left: 6px;
             transition: all 0.2s;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
             font-weight: 500;
         }
 
@@ -968,17 +773,31 @@ console.log('✅ GitHub部署系统已加载');
             background: var(--accent-red);
             color: #ffffff;
             border-color: var(--accent-red);
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25);
             transform: translateY(-1px);
         }
 
         .btn-batch-delete:disabled {
-            background: #f1f5f9;
-            border-color: #e2e8f0;
+            background: #f3f4f6;
+            border-color: var(--border);
             color: var(--text-muted);
             cursor: not-allowed;
             box-shadow: none;
             transform: none;
+        }
+
+        .table-header-actions .btn-batch-delete {
+            background: #fff5f5;
+            color: var(--accent-red);
+            border: 1px solid #fecaca;
+            padding: 4px 12px;
+            font-size: 12px;
+        }
+
+        .table-header-actions .btn-batch-delete:hover {
+            background: var(--accent-red);
+            color: #ffffff;
+            border-color: var(--accent-red);
         }
 
         .selected-row {
@@ -986,59 +805,60 @@ console.log('✅ GitHub部署系统已加载');
             box-shadow: inset 3px 0 0 var(--primary);
         }
 
-        .row-select {
+        .row-select, #select-all {
             cursor: pointer;
             width: 16px;
             height: 16px;
             accent-color: var(--primary);
         }
 
-        #select-all {
-            cursor: pointer;
-            width: 16px;
-            height: 16px;
-            accent-color: var(--primary);
-        }
-
-        .pagination {
+.pagination {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 1rem;
-            padding: 12px 18px;
+            gap: 0.75rem;
+            padding: 10px 16px;
             background: var(--bg-card);
-            margin: 0 16px 14px;
+            margin: 0 14px 12px;
             border-radius: var(--radius-sm);
             border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
         }
 
         .pagination button {
-            padding: 0.38rem 0.9rem;
-            border: 1px solid #e2e8f0;
+            padding: 0.35rem 0.8rem;
+            border: 1px solid var(--border);
             background: #ffffff;
             color: var(--text-secondary);
             border-radius: var(--radius-sm);
             cursor: pointer;
             font-size: 13px;
-            transition: all 0.18s;
+            transition: all 0.15s;
             font-weight: 500;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            min-width: 36px;
+            text-align: center;
         }
 
         .pagination button:hover:not(:disabled) {
             border-color: var(--primary);
             color: var(--primary);
             background: #f0f6ff;
-            box-shadow: 0 1px 6px rgba(22, 119, 255, 0.15);
+            box-shadow: 0 1px 4px rgba(22, 119, 255, 0.1);
             transform: translateY(-1px);
         }
 
         .pagination button:disabled {
-            background: #f8fafc;
-            border-color: #e2e8f0;
+            background: #f9fafb;
+            border-color: var(--border);
             color: var(--text-muted);
             cursor: not-allowed;
+        }
+
+        .pagination button.page-current {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            font-weight: 600;
         }
 
         .pagination span {
@@ -1046,17 +866,27 @@ console.log('✅ GitHub部署系统已加载');
             font-size: 13px;
         }
 
+        .pagination select {
+            padding: 5px 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 13px;
+            background: #ffffff;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
         .dashboard {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
+            gap: 1.25rem;
         }
 
         .dashboard-card {
             background: var(--bg-card);
-            padding: 1.5rem;
+            padding: 1.25rem;
             border-radius: var(--radius-md);
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-sm);
             border: 1px solid var(--border);
             position: relative;
             overflow: hidden;
@@ -1070,148 +900,141 @@ console.log('✅ GitHub部署系统已加载');
             right: 0;
             height: 3px;
             background: var(--primary);
-            border-radius: var(--radius-md) var(--radius-md) 0 0;
         }
 
         .dashboard-card h3 {
             color: var(--text-primary);
-            margin-bottom: 1rem;
-            font-size: 1.05rem;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
             font-weight: 600;
         }
 
         .stat-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
         }
 
         .stat-card {
             background: var(--bg-card);
             color: var(--text-primary);
-            padding: 1.4rem 1.5rem;
+            padding: 1.25rem;
             border-radius: var(--radius-md);
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.25s;
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--border);
             border-top: 2px solid var(--primary);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%);
-            box-shadow: 0 0 10px var(--primary-glow);
-            opacity: 0.8;
         }
 
         .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 20px rgba(22, 119, 255, 0.15), 0 8px 24px rgba(0, 0, 0, 0.08);
-            border-top-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(22, 119, 255, 0.1), 0 4px 12px rgba(0, 0, 0, 0.06);
             border-color: #c7d8ff;
         }
 
-        .stat-card:active {
-            transform: translateY(0);
-        }
-
-        .stat-card h4 {
-            font-size: 2rem;
-            margin-bottom: 0.4rem;
+.stat-card h4 {
+            font-size: 1.75rem;
+            margin-bottom: 0.3rem;
             font-weight: 700;
             color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
+
+        .stat-card h4::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .stat-card:nth-child(2) h4::before { background: var(--accent-green); }
+        .stat-card:nth-child(3) h4::before { background: var(--accent-orange); }
 
         .stat-card p {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--text-secondary);
-            letter-spacing: 0.3px;
         }
 
-        .chart-container {
+.chart-container {
             position: relative;
-            height: 300px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Sheet切换按钮样式 */
         .sheet-tab {
-            padding: 4px 12px;
-            border: 1px solid #e2e8f0;
-            background: #f8fafc;
+            padding: 3px 10px;
+            border: 1px solid var(--border);
+            background: #ffffff;
             color: var(--text-secondary);
             border-radius: var(--radius-sm);
             cursor: pointer;
             font-size: 12px;
             white-space: nowrap;
-            transition: all 0.18s;
+            transition: all 0.15s;
             font-weight: 500;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
+
         .sheet-tab:hover {
             background: #f0f6ff;
             border-color: var(--primary);
             color: var(--primary);
         }
+
         .sheet-tab.active {
             background: #ffffff;
             color: var(--primary);
             border-color: var(--primary);
             border-bottom: 2px solid var(--primary);
-            box-shadow: 0 1px 4px rgba(22, 119, 255, 0.15);
             font-weight: 600;
         }
 
-        /* 小组统计Tabs */
-        .group-stats-tabs {
-            display: flex;
-            gap: 4px;
-        }
+        .group-stats-tabs { display: flex; gap: 3px; }
+
         .group-tab {
-            padding: 5px 14px;
-            border: 1px solid #e2e8f0;
-            background: #f8fafc;
+            padding: 4px 12px;
+            border: 1px solid var(--border);
+            background: #ffffff;
             color: var(--text-secondary);
             border-radius: var(--radius-sm);
             cursor: pointer;
             font-size: 13px;
             white-space: nowrap;
-            transition: all 0.18s;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.15s;
         }
+
         .group-tab:hover {
             background: #f0f6ff;
             color: var(--primary);
             border-color: var(--primary);
         }
+
         .group-tab.active {
             background: #ffffff;
             color: var(--primary);
             border-color: var(--primary);
             border-bottom: 2px solid var(--primary);
             font-weight: 600;
-            box-shadow: 0 1px 4px rgba(22, 119, 255, 0.15);
         }
 
-        /* 数据看板新样式 */
-        .dashboard-section {
+.dashboard-section {
             background: var(--bg-card);
-            padding: 1.5rem;
+            padding: 1.25rem;
             border-radius: var(--radius-md);
-            box-shadow: var(--shadow-md);
-            margin-bottom: 1.25rem;
-            position: relative;
-            z-index: auto;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 1rem;
             border: 1px solid var(--border);
+            position: relative;
             overflow: hidden;
         }
 
@@ -1223,16 +1046,15 @@ console.log('✅ GitHub部署系统已加载');
             right: 0;
             height: 3px;
             background: var(--primary);
-            border-radius: var(--radius-md) var(--radius-md) 0 0;
         }
 
         .section-title {
             color: var(--text-primary);
-            margin-bottom: 1rem;
-            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
             font-weight: 700;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 0.7rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.6rem;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -1242,7 +1064,7 @@ console.log('✅ GitHub部署系统已加载');
             content: '';
             display: inline-block;
             width: 3px;
-            height: 15px;
+            height: 14px;
             background: var(--primary);
             border-radius: 2px;
             flex-shrink: 0;
@@ -1251,69 +1073,66 @@ console.log('✅ GitHub部署系统已加载');
         .dashboard-table-container {
             overflow-x: auto;
             max-height: 400px;
-            overflow-y: auto;
             border-radius: var(--radius-sm);
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         }
 
-        .dashboard-table {
+.dashboard-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.88rem;
+            font-size: 0.85rem;
         }
 
+        #manager-stats-body { transition: opacity 0.15s ease; }
+
         .dashboard-table th {
-            background: #f8fafc;
+            background: #fafbfc;
             color: var(--text-primary);
-            padding: 10px 12px;
+            padding: 8px 10px;
             text-align: left;
             font-weight: 600;
             position: sticky;
             top: 0;
             z-index: 1;
-            font-size: 12.5px;
-            border-bottom: 1px solid #e2e8f0;
+            font-size: 12px;
+            border-bottom: 1px solid var(--border);
         }
 
         .dashboard-table td {
-            padding: 9px 12px;
-            border-bottom: 1px solid #f1f5f9;
+            padding: 7px 10px;
+            border-bottom: 1px solid var(--border-light);
             color: var(--text-secondary);
         }
 
-        .dashboard-table tr:hover {
-            background-color: #f0f6ff;
-        }
-
-        .dashboard-table tr:nth-child(even) {
-            background-color: #fafbfc;
-        }
+        .dashboard-table tr:hover { background-color: #f0f6ff; }
+        .dashboard-table tr:nth-child(even) { background-color: #fafbfc; }
 
         .stage-badge {
             display: inline-block;
-            padding: 3px 9px;
-            border-radius: 12px;
-            font-size: 0.78rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
             font-weight: 600;
         }
 
-        .stage-blueprint {
-            background-color: #e6f4ff;
-            color: var(--primary);
-            border: 1px solid #91caff;
-        }
+.stage-blueprint { background-color: #e6f4ff; color: var(--primary); border: 1px solid #91caff; }
+        .stage-uat { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .stage-online { background-color: #f3e8ff; color: var(--accent-purple); border: 1px solid #c4b5fd; }
+        .stage-acceptance { background-color: #ecfdf5; color: var(--accent-green); border: 1px solid #6ee7b7; }
 
-        .stage-online {
-            background-color: #f3e8ff;
-            color: var(--accent-purple);
-            border: 1px solid #c4b5fd;
-        }
-
-        .stage-acceptance {
-            background-color: #ecfdf5;
-            color: var(--accent-green);
-            border: 1px solid #6ee7b7;
+td[data-column*="金额"],
+        td[data-column*="付款"],
+        td[data-column="蓝图"],
+        td[data-column="UAT测试"],
+        td[data-column="上线"],
+        td[data-column="验收"],
+        td[data-column="质保"],
+        td[data-column="产品"] {
+            text-align: right;
+            font-family: 'Courier New', 'JetBrains Mono', monospace;
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
         .amount-cell {
@@ -1328,13 +1147,10 @@ console.log('✅ GitHub部署系统已加载');
             text-decoration: none;
             border-bottom: 1px dashed var(--primary);
             padding-bottom: 1px;
-            transition: all 0.2s;
+            transition: all 0.15s;
         }
 
-        .manager-link:hover {
-            color: var(--primary-hover);
-            border-bottom-style: solid;
-        }
+        .manager-link:hover { color: var(--primary-hover); border-bottom-style: solid; }
 
         .modal {
             display: none;
@@ -1343,48 +1159,41 @@ console.log('✅ GitHub部署系统已加载');
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.5);
             z-index: 2000;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(4px);
         }
 
-        .modal.active {
-            display: flex !important;
-        }
+        .modal.active { display: flex !important; }
 
         .modal-content {
             background: var(--bg-card);
-            padding: 2rem;
+            padding: 1.75rem;
             border-radius: var(--radius-lg);
             max-width: 500px;
             width: 90%;
             box-shadow: var(--shadow-lg);
             border: 1px solid var(--border);
-            position: relative;
-            overflow: hidden;
-        }
-        .modal-content::before {
-            display: none;
         }
 
         .modal-content h2 {
             color: var(--text-primary);
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
             font-weight: 700;
         }
 
         .modal-content input {
             width: 100%;
-            padding: 0.65rem 0.9rem;
-            margin-bottom: 1rem;
-            border: 1px solid #e2e8f0;
+            padding: 0.55rem 0.75rem;
+            margin-bottom: 0.75rem;
+            border: 1px solid var(--border);
             border-radius: var(--radius-sm);
             font-size: 0.9rem;
             color: var(--text-primary);
-            transition: all 0.2s;
+            transition: all 0.15s;
             background: #ffffff;
         }
 
@@ -1396,38 +1205,35 @@ console.log('✅ GitHub部署系统已加载');
 
         .modal-buttons {
             display: flex;
-            gap: 1rem;
+            gap: 0.75rem;
             justify-content: flex-end;
-            margin-top: 8px;
+            margin-top: 6px;
         }
 
-        /* 待办完成确认弹窗 */
-        .complete-modal .modal-content {
-            max-width: 480px;
-        }
+        .complete-modal .modal-content { max-width: 480px; }
 
         .complete-form-group {
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             text-align: left;
         }
 
         .complete-form-group label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             font-weight: 600;
             color: var(--text-secondary);
-            font-size: 13.5px;
+            font-size: 13px;
         }
 
         .complete-form-group input[type="date"],
         .complete-form-group textarea {
             width: 100%;
-            padding: 9px 12px;
-            border: 1px solid #e2e8f0;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
             border-radius: var(--radius-sm);
-            font-size: 13.5px;
+            font-size: 13px;
             box-sizing: border-box;
-            transition: all 0.2s;
+            transition: all 0.15s;
             color: var(--text-primary);
             background: #ffffff;
         }
@@ -1439,54 +1245,85 @@ console.log('✅ GitHub部署系统已加载');
             box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.1);
         }
 
-        .complete-form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
+        .complete-form-group textarea { resize: vertical; min-height: 80px; }
 
         .complete-form-group .todo-summary {
             background: #f0f6ff;
-            padding: 12px;
+            padding: 10px;
             border-radius: var(--radius-sm);
-            font-size: 13.5px;
+            font-size: 13px;
             color: var(--text-secondary);
-            line-height: 1.6;
+            line-height: 1.5;
             border-left: 3px solid var(--primary);
         }
 
-        .complete-form-group .todo-summary strong {
-            color: var(--text-primary);
-        }
+        .complete-form-group .todo-summary strong { color: var(--text-primary); }
 
-        .loading {
-            text-align: center;
-            padding: 2rem;
-            color: var(--primary);
-        }
+        .loading { text-align: center; padding: 2rem; color: var(--primary); }
 
-        .no-data {
+.no-data {
             text-align: center;
             padding: 3rem;
             color: var(--text-muted);
         }
 
-        @media (max-width: 768px) {
-            .navbar {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .nav-links {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .search-inputs {
-                grid-template-columns: 1fr;
-            }
+        .no-data::before {
+            content: '';
+            display: block;
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            border: 2px dashed var(--border);
+            border-radius: 50%;
+            background: var(--bg-input);
+            position: relative;
         }
 
-        /* 小组配置页面样式 */
+        .no-data::after {
+            content: '';
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: var(--border);
+            margin: 0 auto;
+            position: relative;
+            top: -2.5rem;
+        }
+
+@media (max-width: 1024px) {
+            .container { padding: 0 0.75rem; }
+            .stat-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+            .dashboard { grid-template-columns: 1fr; }
+            .project-info-cards { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; gap: 0.5rem; height: auto; padding: 0.75rem 1rem; }
+            .nav-links { flex-wrap: wrap; justify-content: center; }
+            .nav-links button { font-size: 12px; padding: 0.35rem 0.8rem; }
+            .search-buttons { gap: 4px; }
+            .search-buttons button { font-size: 12px; padding: 5px 10px; }
+            .table-header-top { flex-direction: column; gap: 8px; align-items: flex-start; }
+            .table-header-actions { flex-wrap: wrap; }
+            .table-container { max-height: 400px; }
+            table { font-size: 12px; }
+            th, td { padding: 0.25rem 0.4rem; }
+            .project-info-cards { grid-template-columns: 1fr; }
+            .milestone-fields { grid-template-columns: 1fr; }
+            .todo-row-grid { grid-template-columns: 1fr; }
+            .modal-content { width: 95%; padding: 1.25rem; }
+        }
+
+        @media (max-width: 480px) {
+            .navbar h1 { font-size: 0.95rem; }
+            .search-bar { padding: 8px 10px; }
+            .stat-card { padding: 1rem; }
+            .stat-card h4 { font-size: 1.4rem; }
+            .pagination { flex-direction: column; gap: 8px; margin: 0 8px 10px; padding: 8px 12px; }
+            .pagination button { padding: 0.3rem 0.6rem; font-size: 12px; }
+            .group-tab { padding: 3px 8px; font-size: 12px; }
+        }
+
         .group-config-container,
         .save-as-container {
             max-width: 900px;
@@ -1497,7 +1334,7 @@ console.log('✅ GitHub部署系统已加载');
         .group-config-container h2,
         .save-as-container h2 {
             color: var(--text-primary);
-            margin-bottom: 30px;
+            margin-bottom: 24px;
             text-align: center;
             font-weight: 700;
         }
@@ -1505,119 +1342,93 @@ console.log('✅ GitHub部署系统已加载');
         .group-form,
         .save-as-form {
             background: var(--bg-card);
-            padding: 24px;
+            padding: 20px;
             border-radius: var(--radius-md);
-            box-shadow: var(--shadow-md);
-            margin-bottom: 28px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
             border: 1px solid var(--border);
-            position: relative;
-            overflow: hidden;
-        }
-        .group-form::before,
-        .save-as-form::before {
-            display: none;
         }
 
-        /* 另存为页面样式 */
         .saved-tables-section {
             background: var(--bg-card);
-            padding: 24px;
+            padding: 20px;
             border-radius: var(--radius-md);
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-sm);
             border: 1px solid var(--border);
-            position: relative;
-            overflow: hidden;
-        }
-        .saved-tables-section::before {
-            display: none;
         }
 
         .saved-tables-section h3 {
             color: var(--text-primary);
-            margin-bottom: 18px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
             font-weight: 700;
         }
 
-        .saved-tables-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        .saved-tables-list { display: flex; flex-direction: column; gap: 8px; }
 
         .saved-table-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 16px;
+            padding: 12px 14px;
             background: #fafbfc;
             border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
             border-left: 3px solid var(--primary);
-            border: 1px solid #e2e8f0;
-            border-left: 3px solid var(--primary);
-            transition: all 0.2s;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+            transition: all 0.15s;
         }
 
         .saved-table-item:hover {
             background: #f0f6ff;
-            transform: translateX(4px);
-            box-shadow: 0 2px 8px rgba(22, 119, 255, 0.1);
+            transform: translateX(3px);
+            box-shadow: 0 2px 6px rgba(22, 119, 255, 0.08);
             border-color: #c7d8ff;
         }
 
-        .saved-table-info {
-            flex: 1;
-        }
+        .saved-table-info { flex: 1; }
 
         .saved-table-name {
             font-weight: 700;
             color: var(--text-primary);
-            font-size: 15px;
-            margin-bottom: 4px;
+            font-size: 14px;
+            margin-bottom: 3px;
         }
 
-        .saved-table-meta {
-            color: var(--text-muted);
-            font-size: 12px;
-        }
+        .saved-table-meta { color: var(--text-muted); font-size: 12px; }
 
-        .saved-table-actions {
-            display: flex;
-            gap: 8px;
-        }
+        .saved-table-actions { display: flex; gap: 6px; }
 
         .btn-load-table {
             background: #f0fdf4;
             color: #15803d;
             border: 1px solid #bbf7d0;
-            padding: 5px 12px;
+            padding: 4px 10px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
-            transition: all 0.2s;
+            transition: all 0.15s;
         }
 
         .btn-load-table:hover {
             background: #dcfce7;
-            box-shadow: 0 1px 4px rgba(21, 128, 61, 0.2);
+            box-shadow: 0 1px 3px rgba(21, 128, 61, 0.15);
         }
 
         .btn-delete-table {
             background: #fff5f5;
             color: var(--accent-red);
             border: 1px solid #fecaca;
-            padding: 5px 12px;
+            padding: 4px 10px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
-            transition: all 0.2s;
+            transition: all 0.15s;
         }
 
         .btn-delete-table:hover {
             background: #fee2e2;
-            box-shadow: 0 1px 4px rgba(239, 68, 68, 0.2);
+            box-shadow: 0 1px 3px rgba(239, 68, 68, 0.15);
         }
 
         .no-saved-tables {
@@ -1627,27 +1438,25 @@ console.log('✅ GitHub部署系统已加载');
             font-style: italic;
         }
 
-        .form-row {
-            margin-bottom: 18px;
-        }
+        .form-row { margin-bottom: 16px; }
 
         .form-row label {
             display: block;
-            margin-bottom: 7px;
+            margin-bottom: 6px;
             font-weight: 600;
             color: var(--text-secondary);
-            font-size: 13.5px;
+            font-size: 13px;
         }
 
         .form-row input,
         .form-row textarea {
             width: 100%;
-            padding: 9px 12px;
-            border: 1px solid #e2e8f0;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
             border-radius: var(--radius-sm);
-            font-size: 13.5px;
+            font-size: 13px;
             color: var(--text-primary);
-            transition: all 0.2s;
+            transition: all 0.15s;
             background: #ffffff;
         }
 
@@ -1658,33 +1467,26 @@ console.log('✅ GitHub部署系统已加载');
             box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.1);
         }
 
-        .form-row textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
+        .form-row textarea { min-height: 80px; resize: vertical; }
 
-        .form-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 18px;
-        }
+        .form-buttons { display: flex; gap: 8px; margin-top: 16px; }
 
         .group-list-section,
         .available-managers-section {
             background: var(--bg-card);
-            padding: 20px;
+            padding: 18px;
             border-radius: var(--radius-md);
             box-shadow: var(--shadow-sm);
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             border: 1px solid var(--border);
         }
 
         .group-list-section h3,
         .available-managers-section h3 {
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             color: var(--text-primary);
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
             font-weight: 700;
         }
 
@@ -1692,59 +1494,40 @@ console.log('✅ GitHub部署系统已加载');
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 16px;
-            border: 1px solid #e2e8f0;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
             border-radius: var(--radius-sm);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             background: #fafbfc;
-            transition: all 0.2s;
+            transition: all 0.15s;
         }
 
         .group-item:hover {
             background: #f0f6ff;
             border-color: #c7d8ff;
-            box-shadow: 0 2px 8px rgba(22, 119, 255, 0.08);
+            box-shadow: 0 1px 4px rgba(22, 119, 255, 0.06);
         }
 
-        .group-info {
-            flex: 1;
-        }
+        .group-info { flex: 1; }
 
         .group-name {
             font-weight: 700;
-            font-size: 15px;
+            font-size: 14px;
             color: var(--text-primary);
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
 
-        .group-managers {
-            color: var(--text-muted);
-            font-size: 13px;
-        }
+        .group-managers { color: var(--text-muted); font-size: 13px; }
 
-        .group-actions {
-            display: flex;
-            gap: 8px;
-        }
+        .group-actions { display: flex; gap: 6px; }
 
         .group-actions button {
-            padding: 5px 12px;
+            padding: 4px 10px;
             font-size: 12px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-edit {
-            background: #fffbeb;
-            color: #92400e;
-            border: 1px solid #fde68a;
-        }
-
-        .btn-edit:hover {
-            background: #fef3c7;
-            box-shadow: 0 1px 4px rgba(146, 64, 14, 0.15);
+            transition: all 0.15s;
         }
 
         .btn-delete-small {
@@ -1755,40 +1538,30 @@ console.log('✅ GitHub部署系统已加载');
 
         .btn-delete-small:hover {
             background: #fee2e2;
-            box-shadow: 0 1px 4px rgba(239, 68, 68, 0.2);
+            box-shadow: 0 1px 3px rgba(239, 68, 68, 0.15);
         }
 
-        .available-managers {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
+        .available-managers { display: flex; flex-wrap: wrap; gap: 6px; }
 
         .manager-tag {
             background: #f0f6ff;
             color: var(--primary);
-            padding: 5px 13px;
-            border-radius: 20px;
+            padding: 4px 12px;
+            border-radius: 16px;
             font-size: 13px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.15s;
             border: 1px solid #c7d8ff;
         }
 
         .manager-tag:hover {
             background: #e0ecff;
-            color: var(--primary);
             border-color: var(--primary);
-            box-shadow: 0 1px 4px rgba(22, 119, 255, 0.15);
+            box-shadow: 0 1px 3px rgba(22, 119, 255, 0.1);
         }
 
-        .no-groups {
-            color: var(--text-muted);
-            text-align: center;
-            padding: 20px;
-        }
+        .no-groups { color: var(--text-muted); text-align: center; padding: 20px; }
 
-        /* 项目穿透详情页面样式 */
         .project-detail-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -1799,13 +1572,9 @@ console.log('✅ GitHub部署系统已加载');
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 28px;
-            padding-bottom: 18px;
-            border-bottom: 1px solid #e2e8f0;
-            margin-left: -20px;
-            margin-right: -20px;
-            padding-left: 20px;
-            padding-right: 20px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
         }
 
         .project-header h2 {
@@ -1814,112 +1583,94 @@ console.log('✅ GitHub部署系统已加载');
             font-weight: 700;
         }
 
-        .header-buttons {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
+        .header-buttons { display: flex; gap: 8px; align-items: center; }
 
         .tab-btn {
-            padding: 7px 16px;
-            border: 1px solid #e2e8f0;
-            background: #f8fafc;
+            padding: 6px 14px;
+            border: 1px solid var(--border);
+            background: #ffffff;
             color: var(--text-secondary);
             border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 13.5px;
-            transition: all 0.2s;
+            font-size: 13px;
+            transition: all 0.15s;
         }
 
         .tab-btn:hover {
             background: #f0f6ff;
             color: var(--primary);
             border-color: var(--primary);
-            transform: translateY(-1px);
         }
 
         .tab-btn.active {
             background: var(--primary);
             color: #ffffff;
-            box-shadow: 0 2px 8px rgba(22, 119, 255, 0.3);
             border-color: var(--primary);
         }
 
         .milestone-status {
             font-size: 12px;
-            padding: 2px 9px;
+            padding: 2px 8px;
             border-radius: 10px;
-            margin-left: 10px;
+            margin-left: 8px;
             font-weight: 600;
         }
 
         .milestone-status.saved {
-            background: rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.15);
             color: var(--accent-green);
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            border: 1px solid rgba(16, 185, 129, 0.25);
         }
 
         .milestone-status.unsaved {
-            background: rgba(245, 158, 11, 0.2);
+            background: rgba(245, 158, 11, 0.15);
             color: var(--accent-orange);
-            border: 1px solid rgba(245, 158, 11, 0.3);
+            border: 1px solid rgba(245, 158, 11, 0.25);
         }
 
-        .required-mark {
-            color: var(--accent-red);
-            font-weight: bold;
-        }
+        .required-mark { color: var(--accent-red); font-weight: bold; }
 
         .project-info-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 18px;
-            margin-bottom: 28px;
+            gap: 16px;
+            margin-bottom: 24px;
         }
 
         .info-card {
             background: var(--bg-card);
-            padding: 18px;
+            padding: 16px;
             border-radius: var(--radius-md);
             box-shadow: var(--shadow-sm);
             text-align: center;
             border: 1px solid var(--border);
             border-top: 2px solid var(--primary);
-            transition: all 0.2s;
+            transition: all 0.15s;
         }
+
         .info-card:hover {
-            box-shadow: 0 4px 16px rgba(22, 119, 255, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
-            transform: translateY(-2px);
+            box-shadow: 0 3px 12px rgba(22, 119, 255, 0.08);
+            transform: translateY(-1px);
             border-color: #c7d8ff;
         }
 
-        .info-card h4 {
-            color: var(--primary);
-            margin-bottom: 10px;
-            font-size: 13px;
-            font-weight: 600;
-        }
+        .info-card h4 { color: var(--primary); margin-bottom: 8px; font-size: 13px; font-weight: 600; }
 
-        .info-card p {
-            color: var(--text-primary);
-            font-size: 16px;
-            font-weight: 700;
-            margin: 0;
-        }
+        .info-card p { color: var(--text-primary); font-size: 16px; font-weight: 700; margin: 0; }
 
         .penetration-section, .todo-section, .milestone-section {
             background: var(--bg-card);
-            padding: 22px;
+            padding: 20px;
             border-radius: var(--radius-md);
             box-shadow: var(--shadow-sm);
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             border: 1px solid var(--border);
         }
 
         .penetration-section h3, .todo-section h3, .milestone-section h3 {
             color: var(--text-primary);
-            margin-bottom: 18px;
-            padding-bottom: 10px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
             border-bottom: 2px solid var(--primary-light);
             display: flex;
             justify-content: space-between;
@@ -1927,82 +1678,55 @@ console.log('✅ GitHub部署系统已加载');
             font-weight: 700;
         }
 
-        .milestone-form {
-            background: var(--bg-page);
-            padding: 18px;
-            border-radius: var(--radius-sm);
-        }
+        .milestone-form { background: var(--bg-page); padding: 16px; border-radius: var(--radius-sm); }
 
         .milestone-item {
             background: var(--bg-card);
-            padding: 14px;
+            padding: 12px;
             border-radius: var(--radius-sm);
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             border-left: 4px solid var(--primary);
             box-shadow: var(--shadow-sm);
         }
 
-        .milestone-title {
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 10px;
-            font-size: 13.5px;
-        }
+        .milestone-title { font-weight: 700; color: var(--primary); margin-bottom: 8px; font-size: 13px; }
 
-        .milestone-fields {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-        }
+        .milestone-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-        .milestone-fields .form-col {
-            display: flex;
-            flex-direction: column;
-        }
+        .milestone-fields .form-col { display: flex; flex-direction: column; }
 
-        .milestone-fields label {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 5px;
-        }
+        .milestone-fields label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
 
         .milestone-fields input {
-            padding: 7px 10px;
+            padding: 6px 8px;
             border: 1px solid var(--border);
             border-radius: 4px;
             font-size: 13px;
-            transition: all 0.2s;
+            transition: all 0.15s;
         }
 
         .milestone-fields input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(22,119,255,0.10);
+            box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.08);
         }
 
-        .milestone-item.completed {
-            border-left-color: var(--accent-green);
-        }
-
-        .milestone-item.completed .milestone-title {
-            color: var(--accent-green);
-        }
+        .milestone-item.completed { border-left-color: var(--accent-green); }
+        .milestone-item.completed .milestone-title { color: var(--accent-green); }
 
         .penetration-form {
             background: var(--bg-page);
-            padding: 18px;
+            padding: 16px;
             border-radius: var(--radius-sm);
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             border: 1px solid var(--border);
         }
 
-        .penetration-form .form-row {
-            margin-bottom: 14px;
-        }
+        .penetration-form .form-row { margin-bottom: 12px; }
 
         .penetration-form label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             font-weight: 600;
             color: var(--text-secondary);
             font-size: 13px;
@@ -2010,11 +1734,11 @@ console.log('✅ GitHub部署系统已加载');
 
         .penetration-form input[type="date"] {
             width: 200px;
-            padding: 7px 10px;
+            padding: 6px 8px;
             border: 1px solid var(--border);
             border-radius: 4px;
             font-size: 13px;
-            transition: all 0.2s;
+            transition: all 0.15s;
         }
 
         .penetration-form input[type="date"]:focus {
@@ -2025,12 +1749,12 @@ console.log('✅ GitHub部署系统已加载');
         .penetration-form textarea {
             width: 100%;
             min-height: 80px;
-            padding: 9px 12px;
+            padding: 8px 10px;
             border: 1px solid var(--border);
             border-radius: 4px;
             resize: vertical;
             font-size: 13px;
-            transition: all 0.2s;
+            transition: all 0.15s;
         }
 
         .penetration-form textarea:focus {
@@ -2040,16 +1764,16 @@ console.log('✅ GitHub部署系统已加载');
 
         .todo-detail-section {
             background: #f0f6ff;
-            padding: 14px;
+            padding: 12px;
             border-radius: var(--radius-sm);
-            margin: 14px 0;
+            margin: 12px 0;
             border-left: 4px solid var(--primary);
         }
 
         .todo-detail-section h4 {
-            margin: 0 0 14px 0;
+            margin: 0 0 12px 0;
             color: var(--primary);
-            font-size: 13.5px;
+            font-size: 13px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -2060,84 +1784,66 @@ console.log('✅ GitHub部署系统已加载');
             background: #f0fdf4;
             color: #15803d;
             border: 1px solid #bbf7d0;
-            padding: 5px 12px;
+            padding: 4px 10px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
-            transition: all 0.2s;
+            transition: all 0.15s;
         }
 
         .btn-add-todo:hover {
             background: #dcfce7;
-            box-shadow: 0 1px 4px rgba(21, 128, 61, 0.2);
+            box-shadow: 0 1px 3px rgba(21, 128, 61, 0.15);
         }
 
         .todo-row {
             background: var(--bg-card);
-            padding: 14px;
+            padding: 12px;
             border-radius: var(--radius-sm);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             border: 1px solid var(--border);
-            position: relative;
         }
 
-        .todo-row:hover {
-            border-color: var(--primary);
-            box-shadow: var(--shadow-sm);
-        }
+        .todo-row:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
 
         .todo-row-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
-        .todo-row-title {
-            font-weight: 700;
-            color: var(--primary);
-        }
+        .todo-row-title { font-weight: 700; color: var(--primary); }
 
         .btn-remove-todo {
             background: #fff5f5;
             color: var(--accent-red);
             border: 1px solid #fecaca;
-            padding: 3px 8px;
+            padding: 2px 6px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
-            transition: all 0.2s;
+            transition: all 0.15s;
         }
 
         .btn-remove-todo:hover {
             background: #fee2e2;
-            box-shadow: 0 1px 4px rgba(239, 68, 68, 0.2);
+            box-shadow: 0 1px 3px rgba(239, 68, 68, 0.15);
         }
 
-        .todo-row-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
+        .todo-row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
-        .todo-row-grid .form-col {
-            display: flex;
-            flex-direction: column;
-        }
+        .todo-row-grid .form-col { display: flex; flex-direction: column; }
 
-        .todo-row-grid label {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-        }
+        .todo-row-grid label { font-size: 12px; color: var(--text-muted); margin-bottom: 3px; }
 
         .todo-row-grid input,
         .todo-row-grid textarea {
-            padding: 6px 8px;
+            padding: 5px 6px;
             border: 1px solid var(--border);
             border-radius: 4px;
             font-size: 13px;
-            transition: all 0.2s;
+            transition: all 0.15s;
             color: var(--text-primary);
         }
 
@@ -2147,15 +1853,12 @@ console.log('✅ GitHub部署系统已加载');
             border-color: var(--primary);
         }
 
-        .todo-row-grid textarea {
-            min-height: 60px;
-            resize: vertical;
-        }
+        .todo-row-grid textarea { min-height: 60px; resize: vertical; }
 
         .todo-row-grid .checkbox-col {
             flex-direction: row;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .todo-row-grid .checkbox-col input[type="checkbox"] {
@@ -2164,21 +1867,15 @@ console.log('✅ GitHub部署系统已加载');
             accent-color: var(--primary);
         }
 
-        .form-row-inline {
-            display: flex;
-            gap: 20px;
-        }
-
-        .form-col {
-            flex: 1;
-        }
+        .form-row-inline { display: flex; gap: 16px; }
+        .form-col { flex: 1; }
 
         .form-col input {
             width: 100%;
-            padding: 7px 10px;
+            padding: 6px 8px;
             border: 1px solid var(--border);
             border-radius: 4px;
-            transition: all 0.2s;
+            transition: all 0.15s;
         }
 
         .form-col input:focus {
@@ -2186,65 +1883,50 @@ console.log('✅ GitHub部署系统已加载');
             border-color: var(--primary);
         }
 
-        .penetration-list, .todo-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
+        .penetration-list, .todo-list { max-height: 400px; overflow-y: auto; }
 
         .penetration-item {
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border);
             border-radius: var(--radius-sm);
-            padding: 14px;
-            margin-bottom: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
             background: #fafbfc;
-            transition: all 0.2s;
+            transition: all 0.15s;
         }
 
-        .penetration-item:hover {
-            background: #f0f6ff;
-            border-color: #c7d8ff;
-        }
+        .penetration-item:hover { background: #f0f6ff; border-color: #c7d8ff; }
 
         .penetration-date {
             font-weight: 700;
             color: var(--primary);
-            margin-bottom: 8px;
-            font-size: 13.5px;
+            margin-bottom: 6px;
+            font-size: 13px;
         }
 
         .penetration-content, .penetration-todo {
-            margin-bottom: 8px;
-            line-height: 1.6;
+            margin-bottom: 6px;
+            line-height: 1.5;
             color: var(--text-secondary);
         }
 
-        .penetration-content strong, .penetration-todo strong {
-            color: var(--text-primary);
-        }
+        .penetration-content strong, .penetration-todo strong { color: var(--text-primary); }
 
         .todo-item {
             display: flex;
             align-items: flex-start;
-            padding: 12px 14px;
+            padding: 10px 12px;
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             background: var(--bg-card);
-            transition: all 0.2s;
+            transition: all 0.15s;
         }
 
-        .todo-item:hover {
-            background: #f0f6ff;
-            border-color: #c7d8ff;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .todo-item.completed {
-            background: #f8fafc;
-        }
+        .todo-item:hover { background: #f0f6ff; border-color: #c7d8ff; }
+        .todo-item.completed { background: #f9fafb; }
 
         .todo-checkbox {
-            margin-right: 12px;
+            margin-right: 10px;
             margin-top: 2px;
             width: 16px;
             height: 16px;
@@ -2252,58 +1934,24 @@ console.log('✅ GitHub部署系统已加载');
             accent-color: var(--primary);
         }
 
-        .todo-info {
-            flex: 1;
-        }
+        .todo-info { flex: 1; }
 
         .todo-text {
             color: var(--text-primary);
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             line-height: 1.4;
-            font-size: 13.5px;
+            font-size: 13px;
         }
 
-        .todo-text.completed {
-            text-decoration: line-through;
-            color: var(--text-muted);
-        }
+        .todo-text.completed { text-decoration: line-through; color: var(--text-muted); }
 
-        .todo-meta {
-            display: flex;
-            gap: 15px;
-            font-size: 12px;
-            flex-wrap: wrap;
-        }
-
-        .todo-assignee {
-            color: var(--primary);
-            font-weight: 500;
-        }
-
-        .todo-deadline {
-            color: var(--accent-green);
-        }
-
-        .todo-deadline.overdue {
-            color: var(--accent-red);
-            font-weight: bold;
-        }
-
-        .todo-completed {
-            color: var(--accent-green);
-        }
-
-        .todo-resolution {
-            color: var(--accent-orange);
-            font-size: 12px;
-            display: block;
-            margin-top: 2px;
-        }
-
-        .todo-date {
-            color: var(--text-muted);
-            font-size: 12px;
-        }
+        .todo-meta { display: flex; gap: 12px; font-size: 12px; flex-wrap: wrap; }
+        .todo-assignee { color: var(--primary); font-weight: 500; }
+        .todo-deadline { color: var(--accent-green); }
+        .todo-deadline.overdue { color: var(--accent-red); font-weight: bold; }
+        .todo-completed { color: var(--accent-green); }
+        .todo-resolution { color: var(--accent-orange); font-size: 12px; display: block; margin-top: 2px; }
+        .todo-date { color: var(--text-muted); font-size: 12px; }
 
         .project-name-link {
             color: var(--primary);
@@ -2311,23 +1959,10 @@ console.log('✅ GitHub部署系统已加载');
             text-decoration: underline;
         }
 
-        .project-name-link:hover {
-            color: var(--primary-hover);
-            border-bottom-style: solid;
-        }
+        .project-name-link:hover { color: var(--primary-hover); }
 
-        .no-records {
-            color: var(--text-muted);
-            text-align: center;
-            padding: 40px;
-        }
+        .no-records { color: var(--text-muted); text-align: center; padding: 40px; }
 
-        /* ========== 批注功能样式 ========== */
-
-        /* 批注标记：单元格右上角三角 */
-        .editable-cell {
-            position: relative;
-        }
         .cell-annotation-indicator {
             position: absolute;
             top: 0;
@@ -2340,7 +1975,6 @@ console.log('✅ GitHub部署系统已加载');
             z-index: 1;
         }
 
-        /* 右键菜单 */
         .context-menu {
             display: none;
             position: fixed;
@@ -2353,49 +1987,33 @@ console.log('✅ GitHub部署系统已加载');
             padding: 4px 0;
             font-size: 13px;
         }
+
         .context-menu-item {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 7px 16px;
+            padding: 6px 14px;
             cursor: pointer;
             color: var(--text-secondary);
             transition: all 0.15s;
             white-space: nowrap;
         }
-        .context-menu-item:hover {
-            background: var(--primary-lighter);
-            color: var(--primary);
-        }
-        .context-menu-item.danger {
-            color: #ff4d4f;
-        }
-        .context-menu-item.danger:hover {
-            background: rgba(255, 77, 79, 0.15);
-            color: #ff4d4f;
-        }
-        .context-menu-icon {
-            font-size: 14px;
-            width: 18px;
-            text-align: center;
-        }
-        .context-menu-separator {
-            height: 1px;
-            background: var(--border);
-            margin: 4px 8px;
-        }
+
+        .context-menu-item:hover { background: var(--primary-lighter); color: var(--primary); }
+        .context-menu-item.danger { color: #ff4d4f; }
+        .context-menu-item.danger:hover { background: rgba(255, 77, 79, 0.1); color: #ff4d4f; }
+        .context-menu-icon { font-size: 14px; width: 18px; text-align: center; }
+        .context-menu-separator { height: 1px; background: var(--border); margin: 4px 8px; }
+
         .context-menu-section-title {
-            padding: 4px 16px 6px;
+            padding: 3px 14px 5px;
             font-size: 11px;
             color: var(--text-muted);
             cursor: default;
         }
-        .context-menu-colors {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 3px;
-            padding: 4px 12px 8px;
-        }
+
+        .context-menu-colors { display: flex; flex-wrap: wrap; gap: 3px; padding: 4px 10px 8px; }
+
         .context-menu-color-swatch {
             width: 22px;
             height: 22px;
@@ -2404,35 +2022,32 @@ console.log('✅ GitHub部署系统已加载');
             cursor: pointer;
             transition: transform 0.1s, border-color 0.15s;
         }
+
         .context-menu-color-swatch:hover {
             transform: scale(1.2);
             border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(22,119,255,0.2);
+            box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.15);
         }
 
-        /* 批注悬浮浮窗 */
         .annotation-tooltip {
             display: none;
             position: fixed;
             background: #fffbeb;
             border: 1px solid #fcd34d;
             border-radius: var(--radius-sm);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             z-index: 9999;
             max-width: 320px;
             padding: 8px 12px;
             font-size: 12px;
-            line-height: 1.6;
+            line-height: 1.5;
             color: #92400e;
             word-break: break-word;
             pointer-events: none;
         }
-        .annotation-tooltip::before {
-            content: '💬 ';
-            font-size: 11px;
-        }
 
-        /* 批注编辑器弹窗 */
+        .annotation-tooltip::before { content: '💬 '; font-size: 11px; }
+
         .annotation-editor {
             display: none;
             position: fixed;
@@ -2444,12 +2059,14 @@ console.log('✅ GitHub部署系统已加载');
             width: 360px;
             padding: 16px;
         }
+
         .annotation-editor .editor-title {
             font-size: 14px;
             font-weight: 700;
             color: var(--text-primary);
             margin-bottom: 10px;
         }
+
         .annotation-editor textarea {
             width: 100%;
             height: 100px;
@@ -2462,177 +2079,227 @@ console.log('✅ GitHub部署系统已加载');
             font-family: inherit;
             color: var(--text-primary);
         }
+
         .annotation-editor textarea:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(22,119,255,0.12);
+            box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
         }
+
         .annotation-editor .editor-buttons {
             display: flex;
             justify-content: flex-end;
             gap: 8px;
             margin-top: 10px;
         }
+
         .annotation-editor .editor-buttons button {
-            padding: 5px 16px;
+            padding: 5px 14px;
             border-radius: 4px;
             border: none;
             cursor: pointer;
             font-size: 13px;
-            transition: all 0.2s;
+            transition: all 0.15s;
             font-weight: 500;
         }
-        .annotation-editor .btn-save {
-            background: var(--primary);
-            color: white;
-        }
-        .annotation-editor .btn-save:hover {
-            background: var(--primary-hover);
-        }
-        .annotation-editor .btn-cancel {
-            background: var(--bg-page);
-            color: var(--text-secondary);
-            border: 1px solid var(--border);
-        }
-        .annotation-editor .btn-cancel:hover {
-            background: var(--border);
-        }
 
-        /* ========== 全局 Select / Option 白色主题 ========== */
+        .annotation-editor .btn-save { background: var(--primary); color: white; }
+        .annotation-editor .btn-save:hover { background: var(--primary-hover); }
+        .annotation-editor .btn-cancel { background: var(--bg-page); color: var(--text-secondary); border: 1px solid var(--border); }
+        .annotation-editor .btn-cancel:hover { background: var(--border); }
+
         select {
             background: #ffffff;
             color: var(--text-primary);
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border);
         }
+
         select:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.1);
             outline: none;
         }
-        option {
-            background: #ffffff;
-            color: var(--text-primary);
-        }
 
-        /* ========== 管理员下拉菜单 ========== */
+        option { background: #ffffff; color: var(--text-primary); }
+
         #admin-dropdown-menu {
-            background: var(--bg-card) !important;
-            border: 1px solid var(--border) !important;
-            border-radius: var(--radius-sm) !important;
-            box-shadow: var(--shadow-lg) !important;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
             overflow: hidden;
         }
 
         #admin-dropdown-menu .btn-primary {
-            display: block !important;
-            width: 100% !important;
-            text-align: left !important;
-            border-radius: 0 !important;
-            border-bottom: 1px solid var(--border-light) !important;
-            background: var(--bg-card) !important;
-            color: var(--text-secondary) !important;
-            box-shadow: none !important;
-            padding: 8px 14px !important;
-            font-size: 13px !important;
-            font-weight: 400 !important;
+            display: block;
+            width: 100%;
+            text-align: left;
+            border-radius: 0;
+            border-bottom: 1px solid var(--border-light);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            box-shadow: none;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 400;
         }
 
         #admin-dropdown-menu .btn-primary:hover {
-            background: var(--primary-lighter) !important;
-            color: var(--primary) !important;
-            transform: none !important;
+            background: var(--primary-lighter);
+            color: var(--primary);
+            transform: none;
         }
 
-        /* ========== 退出/登录按钮样式优化 ========== */
+:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+            border-radius: 2px;
+        }
+
+        button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 1px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(22, 119, 255, 0.1);
+        }
+
         #logout-btn, #login-btn {
             min-width: 64px;
             padding: 6px 14px;
             font-size: 13px;
         }
 
-        /* ========== 表格数据行色彩标记 ========== */
-        td[style*="background-color"] {
-            /* 保留Excel原始底色 */
-        }
-
-        /* ========== 增强空状态提示 ========== */
-        .no-data {
-            text-align: center;
-            padding: 4rem;
-            color: var(--text-muted);
-        }
-
-        .no-data::before {
-            content: '';
-            display: block;
-            font-size: 2.5rem;
-            margin-bottom: 0.75rem;
-        }
-
-        /* ========== 滚动条美化 ========== */
-        .table-container::-webkit-scrollbar,
-        .custom-filter-options::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        .table-container::-webkit-scrollbar-track,
-        .custom-filter-options::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        .table-container::-webkit-scrollbar-thumb,
-        .custom-filter-options::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 3px;
-        }
-        .table-container::-webkit-scrollbar-thumb:hover,
-        .custom-filter-options::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-
-        /* ========== 次级按钮（描边风格，白色主题） ========== */
         .btn-outline {
-            background: #f8faff !important;
-            color: var(--primary) !important;
-            border: 1px solid #c7d8ff !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
-            font-weight: 500 !important;
-        }
-        .btn-outline:hover {
-            background: var(--primary) !important;
-            border-color: var(--primary) !important;
-            color: #ffffff !important;
-            transform: translateY(-1px) !important;
-            box-shadow: 0 2px 8px rgba(22, 119, 255, 0.3) !important;
-        }
-        .btn-outline:active {
-            transform: translateY(0) !important;
-            box-shadow: 0 1px 3px rgba(22, 119, 255, 0.2) !important;
+            background: #ffffff;
+            color: var(--primary);
+            border: 1px solid #c7d8ff;
+            font-weight: 500;
         }
 
-        /* 退出按钮特殊样式 */
-        #logout-btn {
-            background: #fff5f5 !important;
-            color: var(--accent-red) !important;
-            border: 1px solid #fecaca !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
-            font-weight: 400 !important;
+        .btn-outline:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+            transform: translateY(-1px);
         }
+
+#logout-btn {
+            background: #ffffff;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
         #logout-btn:hover {
-            background: var(--accent-red) !important;
-            color: #ffffff !important;
-            border-color: var(--accent-red) !important;
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3) !important;
-            transform: translateY(-1px) !important;
+            background: var(--accent-red);
+            color: #ffffff;
+            border-color: var(--accent-red);
+            transform: translateY(-1px);
         }
-    </style>
+
+        .column-resizer {
+            position: absolute;
+            right: -6px;
+            top: 0;
+            bottom: 0;
+            width: 14px;
+            cursor: col-resize;
+            background: transparent;
+            z-index: 100;
+        }
+
+        .column-resizer:hover { background: rgba(22, 119, 255, 0.08); }
+
+        .column-resizer::before {
+            content: '';
+            position: absolute;
+            right: 4px;
+            top: 20%;
+            bottom: 20%;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .column-resizer:hover::before { background: var(--primary); }
+
+        .column-resizer.dragging { background: rgba(22, 119, 255, 0.12); }
+        .column-resizer.dragging::before { background: var(--primary); }
+
+        /* 里程碑完成情况看板样式 */
+        .milestone-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .milestone-stat-card {
+            background: var(--bg-white);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            text-align: center;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+        .milestone-stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+        .milestone-stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        .milestone-stat-completed .milestone-stat-number { color: var(--accent-green); }
+        .milestone-stat-delayed .milestone-stat-number { color: var(--accent-red); }
+        .milestone-stat-pending .milestone-stat-number { color: var(--accent-orange); }
+
+        .ms-status-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .ms-status-completed {
+            background: rgba(82, 196, 26, 0.1);
+            color: #52c41a;
+        }
+        .ms-status-delayed {
+            background: rgba(255, 77, 79, 0.1);
+            color: #ff4d4f;
+        }
+        .ms-status-pending {
+            background: rgba(250, 173, 20, 0.1);
+            color: #faad14;
+        }
+        .ms-status-upcoming {
+            background: rgba(22, 119, 255, 0.1);
+            color: var(--primary);
+        }
+        .ms-delay-days {
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .ms-delay-days.overdue { color: #ff4d4f; }
+        .ms-delay-days.on-track { color: #52c41a; }
+
+        @media (max-width: 768px) {
+            .milestone-stat-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        </style>
 </head>
 <body>
     <div class="navbar">
         <h1>交付四部项目全量信息管理系统</h1>
         <div class="nav-links">
             <button onclick="showPage('data')" class="active" id="btn-data">数据展示</button>
-            <button onclick="showPage('dashboard')" id="btn-dashboard">数据看板</button>
-            <button onclick="showGroupConfig()" id="btn-group">小组配置</button>
+            <button onclick="showPage('dashboard')" id="btn-dashboard" class="">数据看板</button>
+            <button onclick="showGroupConfig()" id="btn-group" class="">小组配置</button>
         </div>
         <div class="user-info">
             <span id="user-status">管理员</span>
@@ -2675,6 +2342,7 @@ console.log('✅ GitHub部署系统已加载');
                             <button onclick="insertRowAfterSelected()" class="btn-primary require-login" style="display: inline-block;">插入行</button>
                             <button onclick="deleteSelectedRows()" class="btn-primary require-login" id="batch-delete-btn" style="display: inline-block;">删除行</button>
                             <button onclick="clearFilter()" class="btn-primary" id="clear-filter-btn" style="display: none;">清除筛选</button>
+                            <button onclick="toggleStageExclusion()" class="btn-secondary" id="stage-exclusion-toggle-btn" style="display: none; font-size: 12px; padding: 4px 10px;">隐藏已关闭项目</button>
                             <span class="record-count-text" id="record-count">共 0 条记录</span>
                         </div>
                     </div>
@@ -3038,15 +2706,15 @@ console.log('✅ GitHub部署系统已加载');
             <!-- 总体统计卡片 -->
             <div class="stat-grid">
                 <div class="stat-card" onclick="drillDownAllProjects()" title="点击查看全部项目">
-                    <h4 id="total-records">45</h4>
+                    <h4 id="total-records">0</h4>
                     <p>总项目数</p>
                 </div>
                 <div class="stat-card" onclick="drillDownContractAmount()" title="点击查看有合同金额的项目">
-                    <h4 id="total-amount">1540.88万</h4>
+                    <h4 id="total-amount">0.00</h4>
                     <p>合同总金额</p>
                 </div>
                 <div class="stat-card" onclick="drillDownPendingAmount()" title="点击查看有待收款的项目">
-                    <h4 id="pending-amount">46.35万</h4>
+                    <h4 id="pending-amount">0.00</h4>
                     <p>待收款金额</p>
                 </div>
             </div>
@@ -3084,8 +2752,7 @@ console.log('✅ GitHub部署系统已加载');
                                 <th>验收阶段</th>
                             </tr>
                         </thead>
-                        <tbody id="manager-stats-body">
-                        </tbody>
+                        <tbody id="manager-stats-body"><tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--text-muted);">该小组暂无项目数据</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -3095,14 +2762,64 @@ console.log('✅ GitHub部署系统已加载');
                 <div class="dashboard-card">
                     <h3>项目阶段分布</h3>
                     <div class="chart-container">
-                        <canvas id="stage-chart" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
+                        <canvas id="stage-chart" height="405" style="display: block; box-sizing: border-box; height: 300px; width: 652.5px;" width="880"></canvas>
                     </div>
                 </div>
                 <div class="dashboard-card">
                     <h3>项目经理待办事项TOP10</h3>
                     <div class="chart-container">
-                        <canvas id="manager-chart" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
+                        <canvas id="manager-chart" height="405" style="display: block; box-sizing: border-box; height: 300px; width: 652.5px;" width="880"></canvas>
                     </div>
+                </div>
+            </div>
+            
+            <!-- 里程碑完成情况看板 -->
+            <div class="dashboard-section" id="milestone-dashboard-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);">
+                    <h3 class="section-title" style="margin: 0; border-bottom: none; padding-bottom: 0;">里程碑完成情况</h3>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button onclick="loadAndRenderMilestoneDashboard()" class="btn-secondary" style="padding: 5px 12px; font-size: 12px;">刷新数据</button>
+                    </div>
+                </div>
+                
+                <!-- 统计卡片 -->
+                <div class="milestone-stat-grid" id="milestone-stat-cards">
+                    <div class="milestone-stat-card">
+                        <div class="milestone-stat-number" id="ms-total">-</div>
+                        <div class="milestone-stat-label">应完成节点</div>
+                    </div>
+                    <div class="milestone-stat-card milestone-stat-completed">
+                        <div class="milestone-stat-number" id="ms-completed">-</div>
+                        <div class="milestone-stat-label">已完成</div>
+                    </div>
+                    <div class="milestone-stat-card milestone-stat-delayed">
+                        <div class="milestone-stat-number" id="ms-delayed">-</div>
+                        <div class="milestone-stat-label">延期未完成</div>
+                    </div>
+                    <div class="milestone-stat-card milestone-stat-pending">
+                        <div class="milestone-stat-number" id="ms-pending">-</div>
+                        <div class="milestone-stat-label">待完成</div>
+                    </div>
+                </div>
+                
+                <!-- 详情表格 -->
+                <div class="dashboard-table-container">
+                    <table class="dashboard-table" id="milestone-dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>项目名称</th>
+                                <th>项目经理</th>
+                                <th>节点类型</th>
+                                <th>要求完成时间</th>
+                                <th>实际完成时间</th>
+                                <th>状态</th>
+                                <th>延期天数</th>
+                            </tr>
+                        </thead>
+                        <tbody id="milestone-dashboard-body">
+                            <tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-muted);">点击"刷新数据"加载里程碑信息</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -3157,15 +2874,66 @@ console.log('✅ GitHub部署系统已加载');
                 <div class="group-list-section">
                     <h3>现有小组</h3>
                     <div id="group-list" class="group-list">
-                        <!-- 小组列表将在这里显示 -->
+                <div class="group-item" data-group-name="%E6%9D%8E%E4%BA%89%E5%85%89">
+                    <div class="group-info">
+                        <div class="group-name">李争光</div>
+                        <div class="group-managers">李争光, 曹青耀, 张聪磊</div>
                     </div>
+                    <div class="group-actions">
+                        <button class="btn-edit" data-action="edit" data-group="%E6%9D%8E%E4%BA%89%E5%85%89">编辑</button>
+                        <button class="btn-delete-small" data-action="delete" data-group="%E6%9D%8E%E4%BA%89%E5%85%89">删除</button>
+                    </div>
+                </div>
+            
+                <div class="group-item" data-group-name="%E4%BA%8E%E5%AD%90%E5%87%8C">
+                    <div class="group-info">
+                        <div class="group-name">于子凌</div>
+                        <div class="group-managers">于子凌, 张仕通, 秦铮</div>
+                    </div>
+                    <div class="group-actions">
+                        <button class="btn-edit" data-action="edit" data-group="%E4%BA%8E%E5%AD%90%E5%87%8C">编辑</button>
+                        <button class="btn-delete-small" data-action="delete" data-group="%E4%BA%8E%E5%AD%90%E5%87%8C">删除</button>
+                    </div>
+                </div>
+            
+                <div class="group-item" data-group-name="%E5%AD%9F%E4%BC%9F%E6%9C%8B">
+                    <div class="group-info">
+                        <div class="group-name">孟伟朋</div>
+                        <div class="group-managers">孟伟朋, 张月洋, 董紫阳</div>
+                    </div>
+                    <div class="group-actions">
+                        <button class="btn-edit" data-action="edit" data-group="%E5%AD%9F%E4%BC%9F%E6%9C%8B">编辑</button>
+                        <button class="btn-delete-small" data-action="delete" data-group="%E5%AD%9F%E4%BC%9F%E6%9C%8B">删除</button>
+                    </div>
+                </div>
+            
+                <div class="group-item" data-group-name="%E9%B2%81%E8%81%9A%E6%AC%A3">
+                    <div class="group-info">
+                        <div class="group-name">鲁聚欣</div>
+                        <div class="group-managers">鲁聚欣, 崔东丽, 侯莉霞, 张正康</div>
+                    </div>
+                    <div class="group-actions">
+                        <button class="btn-edit" data-action="edit" data-group="%E9%B2%81%E8%81%9A%E6%AC%A3">编辑</button>
+                        <button class="btn-delete-small" data-action="delete" data-group="%E9%B2%81%E8%81%9A%E6%AC%A3">删除</button>
+                    </div>
+                </div>
+            
+                <div class="group-item" data-group-name="%E5%BC%A0%E5%AE%89%E6%96%87">
+                    <div class="group-info">
+                        <div class="group-name">张安文</div>
+                        <div class="group-managers">张安文</div>
+                    </div>
+                    <div class="group-actions">
+                        <button class="btn-edit" data-action="edit" data-group="%E5%BC%A0%E5%AE%89%E6%96%87">编辑</button>
+                        <button class="btn-delete-small" data-action="delete" data-group="%E5%BC%A0%E5%AE%89%E6%96%87">删除</button>
+                    </div>
+                </div>
+            </div>
                 </div>
 
                 <div class="available-managers-section">
                     <h3>可用项目经理</h3>
-                    <div id="available-managers" class="available-managers">
-                        <p>请先加载Excel文件以查看项目经理列表</p>
-                    </div>
+                    <div id="available-managers" class="available-managers"><p>请先加载Excel文件以查看项目经理列表</p></div>
                 </div>
             </div>
         </div>
@@ -3369,6 +3137,8 @@ console.log('✅ GitHub部署系统已加载');
         let originalExcelData = [];  // 保存原始数据，用于筛选
         let filteredData = [];
         let allSheetsData = {};  // 存储所有sheet的数据
+        let xlsxXmlColorMap = {};  // JSZip从xlsx XML提取的精确单元格颜色 {sheetName: {row: {col: 'AARRGGBB'}}}
+        let xlsxXmlCommentMap = {};  // JSZip从xlsx XML提取的单元格批注 {sheetName: {row: {col: '批注文本'}}}
         let currentSheetName = '';  // 当前显示的sheet名称
         let currentStatsGroup = '聚欣';  // 当前统计Tab选中的小组
         let currentPage = 1;
@@ -3607,7 +3377,7 @@ console.log('✅ GitHub部署系统已加载');
                 currentExcelFileName = file.name.replace(/\.[^/.]+$/, '');
                 console.log('开始读取文件:', file.name);
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = async function(e) {
                     console.log('文件读取完成');
                     try {
                         const data = new Uint8Array(e.target.result);
@@ -3648,7 +3418,15 @@ console.log('✅ GitHub部署系统已加载');
                             alert('Excel文件中没有工作表，请检查文件格式');
                             return;
                         }
-                        
+
+                        // 使用JSZip从xlsx XML提取精确单元格颜色
+                        xlsxXmlColorMap = await extractCellColorsFromXlsx(e.target.result);
+                        console.log('[颜色提取] 完成, sheets:', Object.keys(xlsxXmlColorMap));
+
+                        // 使用JSZip从xlsx XML提取单元格批注
+                        xlsxXmlCommentMap = await extractCommentsFromXlsx(e.target.result);
+                        console.log('[批注提取] 完成, sheets:', Object.keys(xlsxXmlCommentMap));
+
                         // 处理所有sheet
                         allSheetsData = {};
                         workbook.SheetNames.forEach(sheetName => {
@@ -3686,7 +3464,9 @@ console.log('✅ GitHub部署系统已加载');
                         // 保存原始数据用于筛选
                         originalExcelData = [...excelData];
                         
-                        // 加载Excel时显示所有数据，不进行过滤
+                        // 加载Excel时默认排除已关闭项目
+                        stageExclusionActive = true;
+                        updateStageExclusionBtn();
                         filteredData = [...excelData];
                         console.log('显示所有数据，行数:', filteredData.length);
 
@@ -3694,7 +3474,7 @@ console.log('✅ GitHub部署系统已加载');
                         updateGroupFilter();
                         cellAnnotations = {}; // 清空旧批注，避免跨文件残留
                         importExcelComments(excelData);
-                        renderTable();
+                        applyColumnFilters();
                         updateDashboard();
                         
                         console.log(`成功加载工作表: ${firstSheetName}, 数据行数: ${excelData.length}`);
@@ -3818,12 +3598,12 @@ console.log('✅ GitHub部署系统已加载');
                 document.body.appendChild(loadingMsg);
 
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = async function(e) {
                     try {
                         const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { 
-                            type: 'array', 
-                            cellDates: true, 
+                        const workbook = XLSX.read(data, {
+                            type: 'array',
+                            cellDates: true,
                             cellText: true,
                             cellNF: true,
                             cellStyles: true,
@@ -3834,6 +3614,14 @@ console.log('✅ GitHub部署系统已加载');
                         if (workbook.SheetNames.length === 0) {
                             throw new Error('Excel文件中没有工作表');
                         }
+
+                        // 使用JSZip从xlsx XML提取精确单元格颜色
+                        xlsxXmlColorMap = await extractCellColorsFromXlsx(e.target.result);
+                        console.log('[颜色提取] 完成, sheets:', Object.keys(xlsxXmlColorMap));
+
+                        // 使用JSZip从xlsx XML提取单元格批注
+                        xlsxXmlCommentMap = await extractCommentsFromXlsx(e.target.result);
+                        console.log('[批注提取] 完成, sheets:', Object.keys(xlsxXmlCommentMap));
 
                         // 处理所有sheet
                         allSheetsData = {};
@@ -3874,10 +3662,13 @@ console.log('✅ GitHub部署系统已加载');
                         originalExcelData = [...excelData];
                         filteredData = [...excelData];
 
+                        // 加载Excel时默认排除已关闭项目
+                        stageExclusionActive = true;
+                        updateStageExclusionBtn();
                         populateColumnFilter();
                         cellAnnotations = {}; // 清空旧批注，避免跨文件残留
                         importExcelComments(excelData);
-                        renderTable();
+                        applyColumnFilters();
                         updateDashboard();
                         updateGroupFilter();
 
@@ -3915,6 +3706,297 @@ console.log('✅ GitHub部署系统已加载');
             fileInput.click();
         }
 
+        // 使用JSZip直接从xlsx XML提取精确的单元格填充颜色
+        // 绕过xlsx-style的不准确颜色解析，直接解析styles.xml和sheet XML
+        async function extractCellColorsFromXlsx(arrayBuffer) {
+            const colorMap = {};  // {sheetName: {row: {col: 'FFRRGGBB'}}}
+            try {
+                const zip = await JSZip.loadAsync(arrayBuffer);
+
+                // === Step 1: 解析 styles.xml — 获取 fills 和 cellXfs ===
+                const stylesXml = await zip.file('xl/styles.xml')?.async('string');
+                if (!stylesXml) return colorMap;
+
+                const parser = new DOMParser();
+                const stylesDoc = parser.parseFromString(stylesXml, 'application/xml');
+
+                // 1a. 提取 fills 数组: fillId → RGB颜色
+                const fillsNode = stylesDoc.querySelector('fills');
+                const fills = [];
+                if (fillsNode) {
+                    const fillNodes = fillsNode.querySelectorAll('fill');
+                    fillNodes.forEach(fillNode => {
+                        const patternFill = fillNode.querySelector('patternFill');
+                        if (patternFill) {
+                            const fgColor = patternFill.querySelector('fgColor');
+                            if (fgColor) {
+                                const rgb = fgColor.getAttribute('rgb');
+                                const theme = fgColor.getAttribute('theme');
+                                // 优先用rgb，如果没有则标记theme索引（后续可扩展theme颜色映射）
+                                fills.push({ rgb: rgb || null, theme: theme !== null ? parseInt(theme) : null });
+                            } else {
+                                fills.push({ rgb: null, theme: null });
+                            }
+                        } else {
+                            fills.push({ rgb: null, theme: null });
+                        }
+                    });
+                }
+                console.log('[JSZip颜色提取] fills:', fills.map((f, i) => `[${i}] rgb=${f.rgb} theme=${f.theme}`).join(', '));
+
+                // 1b. 提取 cellXfs 数组: xfIndex → fillId
+                const cellXfsNode = stylesDoc.querySelector('cellXfs');
+                const xfFillIds = [];
+                if (cellXfsNode) {
+                    const xfNodes = cellXfsNode.querySelectorAll('xf');
+                    xfNodes.forEach(xf => {
+                        const fillId = xf.getAttribute('fillId');
+                        xfFillIds.push(fillId !== null ? parseInt(fillId) : 0);
+                    });
+                }
+                console.log('[JSZip颜色提取] cellXfs fillIds:', xfFillIds.join(','));
+
+                // 构建 styleIndex → RGB 映射
+                const styleToRgb = {};
+                xfFillIds.forEach((fillId, xfIndex) => {
+                    if (fillId < fills.length && fills[fillId].rgb) {
+                        styleToRgb[xfIndex] = fills[fillId].rgb;
+                    }
+                });
+
+                // === Step 2: 获取 sheetName → sheetFile 映射 ===
+                // 2a. workbook.xml: sheet name → rId
+                const wbXml = await zip.file('xl/workbook.xml')?.async('string');
+                if (!wbXml) return colorMap;
+                const wbDoc = parser.parseFromString(wbXml, 'application/xml');
+                const sheetEntries = [];
+                wbDoc.querySelectorAll('sheet').forEach(sheet => {
+                    const name = sheet.getAttribute('name');
+                    // r:id 属性在命名空间 http://schemas.openxmlformats.org/officeDocument/2006/relationships
+                    const rId = sheet.getAttribute('r:id') || sheet.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
+                    if (name && rId) sheetEntries.push({ name, rId });
+                });
+
+                // 2b. workbook.xml.rels: rId → Target (sheet file path)
+                const relsXml = await zip.file('xl/_rels/workbook.xml.rels')?.async('string');
+                if (!relsXml) return colorMap;
+                const relsDoc = parser.parseFromString(relsXml, 'application/xml');
+                const rIdToTarget = {};
+                relsDoc.querySelectorAll('Relationship').forEach(rel => {
+                    const id = rel.getAttribute('Id');
+                    const target = rel.getAttribute('Target');
+                    if (id && target) rIdToTarget[id] = target;
+                });
+
+                // 构建 sheetName → sheetFile 映射
+                const sheetNameToFile = {};
+                sheetEntries.forEach(entry => {
+                    const target = rIdToTarget[entry.rId];
+                    if (target) {
+                        // target 可能是 "worksheets/sheet1.xml" 格式
+                        const filePath = target.startsWith('xl/') ? target : 'xl/' + target;
+                        sheetNameToFile[entry.name] = filePath;
+                    }
+                });
+                console.log('[JSZip颜色提取] sheet映射:', JSON.stringify(sheetNameToFile));
+
+                // === Step 3: 解析每个 sheet XML — 获取 cell → styleIndex ===
+                for (const [sheetName, sheetFile] of Object.entries(sheetNameToFile)) {
+                    const sheetXml = await zip.file(sheetFile)?.async('string');
+                    if (!sheetXml) continue;
+
+                    const sheetDoc = parser.parseFromString(sheetXml, 'application/xml');
+                    const sheetColors = {};
+
+                    // 解析所有行和单元格
+                    sheetDoc.querySelectorAll('row').forEach(rowNode => {
+                        rowNode.querySelectorAll('c').forEach(cellNode => {
+                            const cellRef = cellNode.getAttribute('r');  // 如 "E5"
+                            const styleIdx = cellNode.getAttribute('s');  // style index
+                            if (!cellRef || styleIdx === null) return;
+
+                            const idx = parseInt(styleIdx);
+                            const rgb = styleToRgb[idx];
+                            if (!rgb) return;
+
+                            // 解析单元格引用为行列号
+                            const match = cellRef.match(/^([A-Z]+)(\d+)$/);
+                            if (!match) return;
+                            const colStr = match[1];
+                            const rowNum = parseInt(match[2]) - 1;  // 转为0-based
+
+                            // 列字母转数字 (A=0, B=1, ..., Z=25, AA=26, ...)
+                            let colNum = 0;
+                            for (let i = 0; i < colStr.length; i++) {
+                                colNum = colNum * 26 + (colStr.charCodeAt(i) - 64);
+                            }
+                            colNum -= 1;  // 转为0-based
+
+                            if (!sheetColors[rowNum]) sheetColors[rowNum] = {};
+                            sheetColors[rowNum][colNum] = rgb;
+                        });
+                    });
+
+                    colorMap[sheetName] = sheetColors;
+                    const cellCount = Object.values(sheetColors).reduce((s, r) => s + Object.keys(r).length, 0);
+                    console.log(`[JSZip颜色提取] ${sheetName}: ${cellCount}个有色单元格`);
+                }
+            } catch (err) {
+                console.error('[JSZip颜色提取] 解析失败:', err);
+            }
+            return colorMap;
+        }
+
+        // 使用JSZip从xlsx XML提取单元格批注（备注/注释）
+        // 绕过xlsx-style不解析comments的问题，直接解析xl/comments*.xml
+        async function extractCommentsFromXlsx(arrayBuffer) {
+            const commentMap = {};  // {sheetName: {row: {col: '批注文本'}}}
+            try {
+                const zip = await JSZip.loadAsync(arrayBuffer);
+                const parser = new DOMParser();
+
+                // === Step 1: 获取 sheetName → sheetFile 映射（复用颜色提取的逻辑）===
+                const wbXml = await zip.file('xl/workbook.xml')?.async('string');
+                if (!wbXml) return commentMap;
+                const wbDoc = parser.parseFromString(wbXml, 'application/xml');
+                const sheetEntries = [];
+                wbDoc.querySelectorAll('sheet').forEach(sheet => {
+                    const name = sheet.getAttribute('name');
+                    const rId = sheet.getAttribute('r:id') || sheet.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
+                    if (name && rId) sheetEntries.push({ name, rId });
+                });
+
+                const relsXml = await zip.file('xl/_rels/workbook.xml.rels')?.async('string');
+                if (!relsXml) return commentMap;
+                const relsDoc = parser.parseFromString(relsXml, 'application/xml');
+                const rIdToTarget = {};
+                relsDoc.querySelectorAll('Relationship').forEach(rel => {
+                    const id = rel.getAttribute('Id');
+                    const target = rel.getAttribute('Target');
+                    if (id && target) rIdToTarget[id] = target;
+                });
+
+                const sheetNameToFile = {};
+                sheetEntries.forEach(entry => {
+                    const target = rIdToTarget[entry.rId];
+                    if (target) {
+                        const filePath = target.startsWith('xl/') ? target : 'xl/' + target;
+                        sheetNameToFile[entry.name] = filePath;
+                    }
+                });
+
+                // === Step 2: 遍历所有zip文件，找到所有comments*.xml ===
+                const commentsFiles = {};  // fileName → parsed comments map {cellRef: text}
+                for (const [filePath, zipEntry] of Object.entries(zip.files)) {
+                    // 匹配 xl/comments1.xml, xl/comments2.xml 等
+                    if (!filePath.match(/^xl\/comments\d*\.xml$/)) continue;
+                    const commentsXml = await zipEntry.async('string');
+                    const commentsDoc = parser.parseFromString(commentsXml, 'application/xml');
+                    const comments = {};
+                    commentsDoc.querySelectorAll('comment').forEach(commentNode => {
+                        const ref = commentNode.getAttribute('ref');  // 如 "M26"
+                        if (!ref) return;
+                        // 提取批注文本：从 <text> 下的 <r><t> 或 <t> 标签
+                        let text = '';
+                        const textNode = commentNode.querySelector('text');
+                        if (textNode) {
+                            // 方式1：富文本 <r><t>text</t></r>
+                            const runs = textNode.querySelectorAll('r');
+                            if (runs.length > 0) {
+                                runs.forEach(r => {
+                                    const t = r.querySelector('t');
+                                    if (t) text += (t.textContent || '');
+                                });
+                            } else {
+                                // 方式2：纯文本 <t>text</t>
+                                const tNodes = textNode.querySelectorAll('t');
+                                if (tNodes.length > 0) {
+                                    tNodes.forEach(t => { text += (t.textContent || ''); });
+                                } else {
+                                    text = textNode.textContent || '';
+                                }
+                            }
+                        }
+                        text = text.trim();
+                        if (text) {
+                            comments[ref] = text;
+                        }
+                    });
+                    commentsFiles[filePath] = comments;
+                    console.log(`[JSZip批注提取] ${filePath}: ${Object.keys(comments).length}条批注`);
+                }
+
+                if (Object.keys(commentsFiles).length === 0) {
+                    console.log('[JSZip批注提取] xlsx中没有找到comments文件');
+                    return commentMap;
+                }
+
+                // === Step 3: 通过sheet的rels文件，关联sheet到comments文件 ===
+                for (const [sheetName, sheetFile] of Object.entries(sheetNameToFile)) {
+                    // sheetFile 如 "xl/worksheets/sheet1.xml"
+                    // 对应的rels文件如 "xl/worksheets/_rels/sheet1.xml.rels"
+                    const sheetFileName = sheetFile.split('/').pop();  // "sheet1.xml"
+                    const relsPath = sheetFile.replace(/\/[^/]+$/, '/_rels/' + sheetFileName + '.rels');
+                    // 如 "xl/worksheets/_rels/sheet1.xml.rels"
+
+                    const sheetRelsXml = await zip.file(relsPath)?.async('string');
+                    if (!sheetRelsXml) continue;
+
+                    const sheetRelsDoc = parser.parseFromString(sheetRelsXml, 'application/xml');
+                    let commentsFilePath = null;
+
+                    sheetRelsDoc.querySelectorAll('Relationship').forEach(rel => {
+                        const type = rel.getAttribute('Type') || '';
+                        const target = rel.getAttribute('Target') || '';
+                        // comments类型: http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments
+                        if (type.includes('/comments') && target) {
+                            // target 可能是 "../comments1.xml" 相对路径
+                            // 需要转为绝对路径 "xl/comments1.xml"
+                            if (target.startsWith('..')) {
+                                const baseDir = sheetFile.replace(/\/[^/]+$/, '');  // "xl/worksheets"
+                                commentsFilePath = baseDir + '/' + target.replace(/^\.\.\//, '');
+                                // 简化： "../comments1.xml" from "xl/worksheets" → "xl/comments1.xml"
+                                commentsFilePath = 'xl/' + target.replace(/^\.\.\//, '');
+                            } else if (target.startsWith('/')) {
+                                commentsFilePath = target.replace(/^\//, '');
+                            } else {
+                                commentsFilePath = 'xl/' + target;
+                            }
+                        }
+                    });
+
+                    if (!commentsFilePath || !commentsFiles[commentsFilePath]) continue;
+
+                    const comments = commentsFiles[commentsFilePath];
+                    const sheetComments = {};
+
+                    for (const [cellRef, text] of Object.entries(comments)) {
+                        // 解析单元格引用，如 "M26" → row=25(0-based), col=12(0-based)
+                        const match = cellRef.match(/^([A-Z]+)(\d+)$/);
+                        if (!match) continue;
+                        const colStr = match[1];
+                        const rowNum = parseInt(match[2]) - 1;  // 0-based
+
+                        let colNum = 0;
+                        for (let i = 0; i < colStr.length; i++) {
+                            colNum = colNum * 26 + (colStr.charCodeAt(i) - 64);
+                        }
+                        colNum -= 1;  // 0-based
+
+                        if (!sheetComments[rowNum]) sheetComments[rowNum] = {};
+                        sheetComments[rowNum][colNum] = text;
+                    }
+
+                    commentMap[sheetName] = sheetComments;
+                    const commentCount = Object.values(sheetComments).reduce((s, r) => s + Object.keys(r).length, 0);
+                    console.log(`[JSZip批注提取] ${sheetName}: ${commentCount}条批注`);
+                }
+            } catch (err) {
+                console.error('[JSZip批注提取] 解析失败:', err);
+            }
+            return commentMap;
+        }
+
         // 处理单个sheet的数据
         function processSheetData(worksheet, sheetName) {
             console.log(`处理工作表 ${sheetName} 的数据`);
@@ -3930,6 +4012,8 @@ console.log('✅ GitHub部署系统已加载');
             // 读取单元格颜色和批注信息
             const cellColors = {};
             const cellComments = {};
+            // 使用JSZip提取的精确颜色（优先），回退到xlsx-style的颜色
+            const xmlColors = xlsxXmlColorMap[sheetName] || {};
             if (worksheet['!ref']) {
                 const range = XLSX.utils.decode_range(worksheet['!ref']);
                 for (let row = range.s.r; row <= range.e.r; row++) {
@@ -3937,8 +4021,11 @@ console.log('✅ GitHub部署系统已加载');
                         const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
                         const cell = worksheet[cellAddress];
                         if (!cell) continue;
-                        // 提取颜色
-                        if (cell.s) {
+                        // 提取颜色：优先用JSZip XML精确颜色，回退到xlsx-style
+                        if (xmlColors[row] && xmlColors[row][col]) {
+                            if (!cellColors[row]) cellColors[row] = {};
+                            cellColors[row][col] = xmlColors[row][col];
+                        } else if (cell.s) {
                             const fill = cell.s.fill;
                             if (fill && fill.fgColor) {
                                 let color = fill.fgColor.rgb;
@@ -3951,8 +4038,14 @@ console.log('✅ GitHub部署系统已加载');
                                 }
                             }
                         }
-                        // 提取批注（Excel 注释）
-                        if (cell.c) {
+                        // 提取批注（Excel 注释）— 优先用JSZip XML，回退到xlsx-style的cell.c
+                        // 先尝试从JSZip提取的精确批注
+                        const xmlComments = xlsxXmlCommentMap[sheetName] || {};
+                        if (xmlComments[row] && xmlComments[row][col]) {
+                            if (!cellComments[row]) cellComments[row] = {};
+                            cellComments[row][col] = xmlComments[row][col];
+                            console.log(`[JSZip批注] 行${row}列${col}(${XLSX.utils.encode_col(col)}): "${xmlComments[row][col].substring(0, 100)}"`);
+                        } else if (cell.c) {
                             // 辅助函数：从批注项中深度提取文本（支持纯文本、富文本等格式）
                             const extractText = (item) => {
                                 if (typeof item === 'string') return item;
@@ -4000,7 +4093,22 @@ console.log('✅ GitHub部署系统已加载');
                     }
                 }
             }
-            
+
+            // 补充：将JSZip提取的批注中未被主循环覆盖的部分也加入cellComments
+            // 处理主循环未遍历到的单元格（如空单元格有批注但不在worksheet对象中的情况）
+            const xmlCommentsAll = xlsxXmlCommentMap[sheetName] || {};
+            for (const [rowStr, rowComments] of Object.entries(xmlCommentsAll)) {
+                const row = parseInt(rowStr);
+                for (const [colStr, text] of Object.entries(rowComments)) {
+                    const col = parseInt(colStr);
+                    if (!cellComments[row] || !cellComments[row][col]) {
+                        if (!cellComments[row]) cellComments[row] = {};
+                        cellComments[row][col] = text;
+                        console.log(`[JSZip批注补充] 行${row}列${col}(${XLSX.utils.encode_col(col)}): "${text.substring(0, 100)}"`);
+                    }
+                }
+            }
+
             // 分析表头结构
             let level2RowIndex = -1;
             let level1RowIndex = -1;
@@ -4222,7 +4330,7 @@ console.log('✅ GitHub部署系统已加载');
             updateGroupFilter();
             cellAnnotations = {}; // 切换工作表时清空批注
             importExcelComments(excelData);
-            renderTable();
+            applyColumnFilters();
             updateDashboard();
             
             console.log(`切换到工作表: ${sheetName}, 数据行数: ${excelData.length}`);
@@ -4250,6 +4358,10 @@ console.log('✅ GitHub部署系统已加载');
 
         // 列过滤配置
         let columnFilters = {};
+
+        // 默认排除已关闭的项目阶段（加载Excel后自动生效）
+        const defaultStageExclusions = ['内部关闭', '终止关闭', '验收关闭'];
+        let stageExclusionActive = false;
 
         // 选中的行集合
         let selectedRows = new Set();
@@ -4788,8 +4900,8 @@ console.log('✅ GitHub部署系统已加载');
                 const cells = currentHeaders.map(header => {
                     const value = row[header] || '';
                     const colorKey = `_${header}_color`;
-                    const color = row[colorKey];
-                    
+                    let color = row[colorKey];
+
                     // 如果有颜色，添加背景色样式
                     let style = '';
                     if (color) {
@@ -4801,7 +4913,18 @@ console.log('✅ GitHub部署系统已加载');
                         } else if (!color.startsWith('#') && color.length === 6) {
                             cssColor = '#' + color;
                         }
-                        style = ` style="background-color: ${cssColor};"`;
+                        // 智能文字颜色：深色背景自动配白字
+                        let textColor = '';
+                        const hexMatch = cssColor.match(/^#([0-9a-fA-F]{6})$/);
+                        if (hexMatch) {
+                            const r = parseInt(hexMatch[1].substr(0, 2), 16);
+                            const g = parseInt(hexMatch[1].substr(2, 2), 16);
+                            const b = parseInt(hexMatch[1].substr(4, 2), 16);
+                            // 使用YIQ亮度公式判断是否需要白字
+                            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                            if (brightness < 128) textColor = ' color: #ffffff;';
+                        }
+                        style = ` style="background-color: ${cssColor};${textColor}"`;
                     }
                     
                     // 批注标记
@@ -5263,6 +5386,18 @@ console.log('✅ GitHub部署系统已加载');
                 }
                 return true;
             });
+
+            // 应用默认阶段排除（隐藏已关闭项目）
+            if (stageExclusionActive) {
+                const stageColumn = Object.keys(excelData[0] || {}).find(h => h && (h.includes('项目阶段') || h.includes('已达成')));
+                if (stageColumn) {
+                    filteredData = filteredData.filter(row => {
+                        const stageValue = String(row[stageColumn] || '').trim();
+                        return !defaultStageExclusions.includes(stageValue);
+                    });
+                }
+            }
+
             console.log('Filtered data count:', filteredData.length);
             currentPage = 1;
             renderTable();
@@ -5279,9 +5414,25 @@ console.log('✅ GitHub部署系统已加载');
         function resetSearch() {
             // 清除所有列筛选
             columnFilters = {};
-            filteredData = [...excelData];
-            currentPage = 1;
-            renderTable();
+            // 保持阶段排除状态，重新应用过滤
+            applyColumnFilters();
+        }
+
+        // 切换已关闭项目的显示/隐藏
+        function toggleStageExclusion() {
+            stageExclusionActive = !stageExclusionActive;
+            updateStageExclusionBtn();
+            applyColumnFilters();
+        }
+
+        // 更新阶段排除按钮的状态和可见性
+        function updateStageExclusionBtn() {
+            const btn = document.getElementById('stage-exclusion-toggle-btn');
+            if (btn) {
+                btn.style.display = 'inline-block';
+                btn.textContent = stageExclusionActive ? '显示已关闭项目' : '隐藏已关闭项目';
+                btn.style.background = stageExclusionActive ? '' : 'rgba(22, 119, 255, 0.08)';
+            }
         }
 
         function previousPage() {
@@ -6178,8 +6329,11 @@ console.log('✅ GitHub部署系统已加载');
                 // 渲染sheet标签
                 renderSheetTabs();
                 
+                // 云端加载默认排除已关闭项目
+                stageExclusionActive = true;
+                updateStageExclusionBtn();
                 populateColumnFilter();
-                renderTable();
+                applyColumnFilters();
                 updateDashboard();
                 
                 const saveTime = cloudData.saveTime;
@@ -6215,8 +6369,11 @@ console.log('✅ GitHub部署系统已加载');
                 // 清空sheet标签
                 document.getElementById('sheet-tabs').innerHTML = '';
                 
+                // 云端加载默认排除已关闭项目
+                stageExclusionActive = true;
+                updateStageExclusionBtn();
                 populateColumnFilter();
-                renderTable();
+                applyColumnFilters();
                 updateDashboard();
                 
                 const saveTime = cloudData.saveTime;
@@ -9007,7 +9164,8 @@ console.log('✅ GitHub部署系统已加载');
                         alert(`⚠️ 聚合统计(${modeLabel})\n未发现需要排除的项目（验收关闭/内部关闭/终止关闭）\n原始数据: ${rawData.length} 条\n请查看浏览器控制台(F12)的诊断信息`);
                     }
                 }
-                return filtered;
+                // 按主项目编号去重，防止同一项目在多个Sheet中被重复统计
+                return deduplicateProjects(filtered);
             }
             
             // 按 TARGET_STATS_SHEETS 顺序收集数据（云端模式）
@@ -9042,7 +9200,8 @@ console.log('✅ GitHub部署系统已加载');
                     alert(`⚠️ 聚合统计(${modeLabel})\n未发现需要排除的项目（验收关闭/内部关闭/终止关闭）\n聚合记录: ${allData.length} 条\n请查看浏览器控制台(F12)的诊断信息`);
                 }
             }
-            return allData;
+            // 按主项目编号去重，防止同一项目在多个Sheet中被重复统计
+            return deduplicateProjects(allData);
         }
 
         function updateDashboard() {
@@ -9094,6 +9253,11 @@ console.log('✅ GitHub部署系统已加载');
 
             // 更新图表
             updateCharts(dataToUse);
+
+            // 里程碑看板：如果已有缓存数据则重新渲染
+            if (Object.keys(milestoneDashboardCache).length > 0) {
+                renderMilestoneDashboard();
+            }
         }
 
         // 更新项目阶段统计
@@ -9374,6 +9538,9 @@ console.log('✅ GitHub部署系统已加载');
                 allData = originalExcelData.length > 0 ? originalExcelData : excelData;
             }
 
+            // 按主项目编号去重，防止同一项目在多个Sheet中被重复统计
+            allData = deduplicateProjects(allData);
+
             const managerStats = {};
 
             // 统计所有Sheet中属于当前小组的项目经理数据
@@ -9451,7 +9618,12 @@ console.log('✅ GitHub部署系统已加载');
 
         // 切换小组统计Tab
         function switchGroupStatsTab(groupName) {
+            const tbody = document.getElementById('manager-stats-body');
+            tbody.style.opacity = '0';
             updateManagerStats(groupName);
+            requestAnimationFrame(() => {
+                tbody.style.opacity = '1';
+            });
         }
         
         // 从单元格获取项目阶段（已完成的项目阶段）
@@ -9561,6 +9733,8 @@ console.log('✅ GitHub部署系统已加载');
                 } else {
                     rawData = originalExcelData.length > 0 ? originalExcelData : excelData;
                 }
+                // 按主项目编号去重，防止同一项目在多个Sheet中被重复显示
+                rawData = deduplicateProjects(rawData);
                 filteredData = rawData.filter(row => row[managerColumn] === manager && shouldIncludeProject(row));
                 currentPage = 1;
                 renderTable();
@@ -9584,6 +9758,18 @@ console.log('✅ GitHub部署系统已加载');
             const amountStr = String(amountValue).trim();
             const num = parseFloat(amountStr.replace(/[$,\s]/g, '')) || 0;
             return num > 0;
+        }
+
+        // 辅助函数：按主项目编号去重（跨Sheet聚合时防止同一项目被重复统计）
+        function deduplicateProjects(dataArray) {
+            const seen = new Set();
+            return dataArray.filter(row => {
+                const projectId = row['主项目编号'];
+                if (!projectId) return true;  // 无编号的行保留（不去重）
+                if (seen.has(projectId)) return false;  // 已出现过则过滤
+                seen.add(projectId);
+                return true;
+            });
         }
 
         // 点击"总项目数"：显示五个sheet的全部项目（去除合同总金额为空的行）
@@ -9648,10 +9834,9 @@ console.log('✅ GitHub部署系统已加载');
 
         // 清除筛选，显示所有项目
         window.clearFilter = function() {
-            // 恢复显示所有数据（不进行过滤）
-            filteredData = [...excelData];
-            currentPage = 1;
-            renderTable();
+            // 清除列筛选，但保持阶段排除
+            columnFilters = {};
+            applyColumnFilters();
             // 隐藏清除筛选按钮
             const clearBtn = document.getElementById('clear-filter-btn');
             if (clearBtn) {
@@ -9684,6 +9869,9 @@ console.log('✅ GitHub部署系统已加载');
                 // 否则使用传入的数据或原始数据
                 allData = dataToUse || (originalExcelData.length > 0 ? originalExcelData : excelData);
             }
+
+            // 按主项目编号去重，防止同一项目在多个Sheet中被重复统计
+            allData = deduplicateProjects(allData);
 
             // 项目阶段分布饼图 - 使用与项目经理统计相同的逻辑（从已完成项目阶段单元格取值）
             // 过滤规则：剔除内部关闭、终止关闭；验收、验收关闭且已全部回款的项目
@@ -9878,6 +10066,263 @@ console.log('✅ GitHub部署系统已加载');
                         }]
                     });
                 }
+            }
+        }
+
+        // ========== 里程碑完成情况看板 ==========
+        
+        // 里程碑看板数据缓存
+        let milestoneDashboardCache = {};
+        let milestoneDashboardLoading = false;
+
+        // 从OSS批量加载所有项目的里程碑数据
+        async function loadAllMilestonesFromCloud() {
+            if (!OSS_CONFIG.accessKeyId || !OSS_CONFIG.accessKeySecret || !OSS_CONFIG.bucket) {
+                console.log('未配置云端存储，无法加载里程碑数据');
+                return {};
+            }
+
+            try {
+                const client = new OSS({
+                    region: OSS_CONFIG.region,
+                    bucket: OSS_CONFIG.bucket,
+                    accessKeyId: OSS_CONFIG.accessKeyId,
+                    accessKeySecret: OSS_CONFIG.accessKeySecret,
+                    secure: true
+                });
+
+                // 列出 m/ 目录下所有JSON文件
+                const result = await client.list({ prefix: 'm/', 'max-keys': 500 });
+                const files = (result.objects || []).filter(obj => obj.name && obj.name.endsWith('.json'));
+                console.log(`里程碑看板：发现 ${files.length} 个里程碑文件`);
+
+                // 并发加载所有文件（控制并发数为10）
+                const allMilestones = {};
+                const batchSize = 10;
+                for (let i = 0; i < files.length; i += batchSize) {
+                    const batch = files.slice(i, i + batchSize);
+                    const results = await Promise.allSettled(batch.map(async (file) => {
+                        const signedUrl = client.signatureUrl(file.name, { expires: 3600, method: 'GET' });
+                        const resp = await fetch(signedUrl);
+                        if (!resp.ok) return null;
+                        const text = await resp.text();
+                        if (text.trim().startsWith('<')) return null;
+                        const data = JSON.parse(text);
+                        const projectCode = file.name.replace('m/', '').replace('.json', '');
+                        return { projectCode, milestones: data.milestones || null };
+                    }));
+                    results.forEach(r => {
+                        if (r.status === 'fulfilled' && r.value && r.value.milestones) {
+                            allMilestones[r.value.projectCode] = r.value.milestones;
+                        }
+                    });
+                }
+                console.log(`里程碑看板：成功加载 ${Object.keys(allMilestones).length} 个项目的里程碑数据`);
+                return allMilestones;
+            } catch (error) {
+                console.error('批量加载里程碑数据失败:', error);
+                return {};
+            }
+        }
+
+        // 辅助函数：计算已完成节点的隐藏截止日期
+        // 规则：实际完成时间所在季度的下个季度的第二个月末之后隐藏
+        // 例如：6月完成(Q2) → 下季度Q3的第二个月=8月 → 8月31日后隐藏
+        function getMilestoneHideAfterDate(actualDateStr) {
+            const actualDate = new Date(actualDateStr);
+            const actualMonth = actualDate.getMonth(); // 0-indexed
+            const actualYear = actualDate.getFullYear();
+            // 当前月所在季度（0-indexed月份 → 季度起始月）
+            const quarterStartMonth = Math.floor(actualMonth / 3) * 3; // Q1=0, Q2=3, Q3=6, Q4=9
+            // 下个季度起始月
+            const nextQuarterStartMonth = quarterStartMonth + 3;
+            // 下个季度的第二个月 = nextQuarterStartMonth + 1（0-indexed）
+            const hideMonth = nextQuarterStartMonth + 1; // 0-indexed
+            // 处理跨年：如果下个季度起始月 >= 12，则年份+1
+            const hideYear = actualYear + Math.floor(hideMonth / 12);
+            const hideMonthNorm = hideMonth % 12;
+            // 该月最后一天
+            const lastDay = new Date(hideYear, hideMonthNorm + 1, 0).getDate();
+            return new Date(hideYear, hideMonthNorm, lastDay);
+        }
+
+        // 聚合里程碑数据并渲染看板
+        function renderMilestoneDashboard() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // 从所有sheet获取项目数据（去重）
+            const managerColumn = headers.find(h => h.includes('项目经理') || h.includes('负责人'));
+            let allData = [];
+            if (Object.keys(allSheetsData).length > 0) {
+                Object.entries(allSheetsData).forEach(([sheetName, sheetData]) => {
+                    if (sheetName.includes('预算')) return;
+                    allData = allData.concat(sheetData.data || []);
+                });
+            } else {
+                allData = originalExcelData.length > 0 ? originalExcelData : excelData;
+            }
+            allData = deduplicateProjects(allData);
+
+            // 构建里程碑详情列表
+            const milestoneTypes = [
+                { key: 'blueprint', label: '蓝图确认' },
+                { key: 'goLive', label: '上线确认' },
+                { key: 'acceptance', label: '系统验收' }
+            ];
+
+            const details = [];
+            let totalCount = 0;
+            let completedCount = 0;
+            let delayedCount = 0;
+            let pendingCount = 0;
+
+            allData.forEach(row => {
+                const projectCode = row['主项目编号'];
+                const projectName = row['主项目名称'];
+                const manager = managerColumn ? row[managerColumn] : '';
+                if (!projectCode || !projectName) return;
+
+                const ms = milestoneDashboardCache[projectCode];
+                if (!ms) return;
+
+                milestoneTypes.forEach(mt => {
+                    const node = ms[mt.key];
+                    if (!node || !node.deadline) return;
+
+                    const deadlineDate = new Date(node.deadline);
+                    deadlineDate.setHours(0, 0, 0, 0);
+
+                    let status, delayDays = 0;
+
+                    if (node.actual) {
+                        // 已完成 —— 检查是否需要隐藏
+                        const hideAfter = getMilestoneHideAfterDate(node.actual);
+                        if (today > hideAfter) return; // 超过隐藏期限，不显示
+
+                        const actualDate = new Date(node.actual);
+                        actualDate.setHours(0, 0, 0, 0);
+                        status = 'completed';
+                        if (actualDate > deadlineDate) {
+                            delayDays = Math.round((actualDate - deadlineDate) / 86400000);
+                        }
+                        completedCount++;
+                    } else {
+                        // 未完成
+                        if (today > deadlineDate) {
+                            status = 'delayed';
+                            delayDays = Math.round((today - deadlineDate) / 86400000);
+                            delayedCount++;
+                        } else {
+                            status = 'pending';
+                            delayDays = -Math.round((deadlineDate - today) / 86400000);
+                            pendingCount++;
+                        }
+                    }
+
+                    totalCount++;
+                    details.push({
+                        projectName,
+                        manager,
+                        type: mt.key,
+                        typeLabel: mt.label,
+                        deadline: node.deadline,
+                        actual: node.actual || '',
+                        status,
+                        delayDays
+                    });
+                });
+            });
+
+            // 更新统计卡片
+            document.getElementById('ms-total').textContent = totalCount;
+            document.getElementById('ms-completed').textContent = completedCount;
+            document.getElementById('ms-delayed').textContent = delayedCount;
+            document.getElementById('ms-pending').textContent = pendingCount;
+
+            // 排序：延期 > 待完成 > 已完成，延期中按延期天数降序
+            const statusOrder = { delayed: 0, pending: 1, completed: 2 };
+            details.sort((a, b) => {
+                if (statusOrder[a.status] !== statusOrder[b.status]) return statusOrder[a.status] - statusOrder[b.status];
+                if (a.status === 'delayed') return b.delayDays - a.delayDays;
+                return a.deadline.localeCompare(b.deadline);
+            });
+
+            // 渲染表格
+            const tbody = document.getElementById('milestone-dashboard-body');
+            if (details.length === 0) {
+                const cacheCount = Object.keys(milestoneDashboardCache).length;
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-muted);">${cacheCount === 0 ? '暂无里程碑数据，请点击"刷新数据"从云端加载' : '当前无活跃的里程碑节点'}</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = details.map(d => {
+                let statusBadge, delayText;
+                if (d.status === 'completed') {
+                    statusBadge = '<span class="ms-status-badge ms-status-completed">已完成</span>';
+                    delayText = d.delayDays > 0 ? `<span class="ms-delay-days overdue">延期${d.delayDays}天</span>` : '<span class="ms-delay-days on-track">按期</span>';
+                } else if (d.status === 'delayed') {
+                    statusBadge = '<span class="ms-status-badge ms-status-delayed">延期</span>';
+                    delayText = `<span class="ms-delay-days overdue">超期${d.delayDays}天</span>`;
+                } else {
+                    statusBadge = '<span class="ms-status-badge ms-status-pending">待完成</span>';
+                    delayText = `<span class="ms-delay-days" style="color:var(--primary);">剩余${-d.delayDays}天</span>`;
+                }
+
+                return `<tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('${d.projectName.replace(/'/g, "\\'")}')">${d.projectName}</span></td>
+                    <td>${d.manager}</td>
+                    <td>${d.typeLabel}</td>
+                    <td>${d.deadline}</td>
+                    <td>${d.actual || '-'}</td>
+                    <td>${statusBadge}</td>
+                    <td>${delayText}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        // 加载并渲染里程碑看板
+        async function loadAndRenderMilestoneDashboard() {
+            if (milestoneDashboardLoading) return;
+            milestoneDashboardLoading = true;
+
+            const tbody = document.getElementById('milestone-dashboard-body');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-muted);">正在从云端加载里程碑数据...</td></tr>';
+            }
+
+            // 从OSS批量加载
+            const data = await loadAllMilestonesFromCloud();
+            milestoneDashboardCache = data;
+            milestoneDashboardLoading = false;
+
+            // 渲染
+            renderMilestoneDashboard();
+        }
+
+        // 通过项目名称定位并打开项目详情
+        function showProjectDetailByName(projectName) {
+            // 在所有sheet中查找该项目
+            let targetRowIndex = -1;
+            if (Object.keys(allSheetsData).length > 0) {
+                for (const [sheetName, sheetData] of Object.entries(allSheetsData)) {
+                    if (sheetName.includes('预算')) continue;
+                    const data = sheetData.data || [];
+                    for (let i = 0; i < data.length; i++) {
+                        if (data[i]['主项目名称'] === projectName) {
+                            // 切换到对应sheet并打开详情
+                            switchSheet(sheetName);
+                            targetRowIndex = i;
+                            break;
+                        }
+                    }
+                    if (targetRowIndex >= 0) break;
+                }
+            }
+            if (targetRowIndex >= 0) {
+                showProjectDetail(targetRowIndex);
+            } else {
+                alert(`未找到项目: ${projectName}`);
             }
         }
 
