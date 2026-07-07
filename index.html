@@ -2299,7 +2299,7 @@ td[data-column*="金额"],
         <h1>交付四部项目全量信息管理系统</h1>
         <div class="nav-links">
             <button onclick="showPage('data')" class="active" id="btn-data">数据展示</button>
-            <button onclick="showPage('dashboard')" id="btn-dashboard">数据看板</button>
+            <button onclick="showPage('dashboard')" id="btn-dashboard" class="">数据看板</button>
             <button onclick="showGroupConfig()" id="btn-group">小组配置</button>
         </div>
         <div class="user-info">
@@ -2785,13 +2785,27 @@ td[data-column*="金额"],
                 <div class="dashboard-card">
                     <h3>项目阶段分布</h3>
                     <div class="chart-container">
-                        <canvas id="stage-chart" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
+                        <canvas id="stage-chart" height="405" style="display: block; box-sizing: border-box; height: 300px; width: 652.5px;" width="880"></canvas>
                     </div>
                 </div>
                 <div class="dashboard-card">
-                    <h3>项目经理待办事项TOP10</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <h3 style="margin: 0;">项目经理待办事项TOP10</h3>
+                        <button onclick="refreshTodoChart()" style="padding: 4px 12px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px; background: #fff; color: var(--primary); cursor: pointer;" id="todo-refresh-btn">刷新数据</button>
+                    </div>
                     <div class="chart-container">
-                        <canvas id="manager-chart" height="0" style="display: block; box-sizing: border-box; height: 0px; width: 0px;" width="0"></canvas>
+                        <canvas id="manager-chart" height="405" style="display: block; box-sizing: border-box; height: 300px; width: 652.5px; cursor: default;" width="880"></canvas>
+                    </div>
+                </div>
+
+                <!-- 待办事项联查弹窗 -->
+                <div id="todo-drilldown-overlay" style="display: none; position: fixed; top: 0px; left: 0px; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); z-index: 9999; justify-content: center; align-items: center;" onclick="if(event.target===this)closeTodoDrilldown()">
+                    <div style="background:#fff; border-radius:10px; width:720px; max-width:90vw; max-height:80vh; display:flex; flex-direction:column; box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-bottom:1px solid var(--border);">
+                            <h3 id="todo-drilldown-title" style="margin:0; font-size:16px; color:#1e293b;">秦铮 的待办事项（1项）</h3>
+                            <button onclick="closeTodoDrilldown()" style="background:none; border:none; font-size:20px; cursor:pointer; color:#94a3b8; padding:0 4px;">×</button>
+                        </div>
+                        <div id="todo-drilldown-body" style="overflow-y:auto; padding:16px 20px; flex:1;"><div style="margin-bottom:16px;"><div style="font-size:13px; font-weight:600; color:#1e293b; margin-bottom:8px; padding:6px 10px; background:#f8fafc; border-radius:6px; border-left:3px solid var(--primary);">蓝鸟家具财务费用报销项目 <span style="color:#94a3b8; font-weight:400;">(1项)</span></div><table style="width:100%; border-collapse:collapse; font-size:13px;"><thead><tr style="color:#64748b; background:#f8fafc;"><th style="padding:6px 10px; text-align:left; border-bottom:1px solid #e2e8f0; width:45%;">待办内容</th><th style="padding:6px 10px; text-align:left; border-bottom:1px solid #e2e8f0; width:20%;">责任人</th><th style="padding:6px 10px; text-align:left; border-bottom:1px solid #e2e8f0; width:20%;">截止日期</th><th style="padding:6px 10px; text-align:center; border-bottom:1px solid #e2e8f0; width:15%;">状态</th></tr></thead><tbody><tr><td style="padding:8px 10px; border-bottom:1px solid #f1f5f9;">和客户确认验收，走签字流程</td><td style="padding:8px 10px; border-bottom:1px solid #f1f5f9;">秦铮</td><td style="padding:8px 10px; border-bottom:1px solid #f1f5f9; ">2026-07-10</td><td style="padding:8px 10px; border-bottom:1px solid #f1f5f9; text-align:center;"><span style="font-size:11px; background:#fff7ed; color:#ea580c; padding:2px 8px; border-radius:3px;">待完成</span></td></tr></tbody></table></div></div>
                     </div>
                 </div>
             </div>
@@ -2808,19 +2822,19 @@ td[data-column*="金额"],
                 <!-- 统计卡片 -->
                 <div class="milestone-stat-grid" id="milestone-stat-cards">
                     <div class="milestone-stat-card">
-                        <div class="milestone-stat-number" id="ms-total">-</div>
+                        <div class="milestone-stat-number" id="ms-total">16</div>
                         <div class="milestone-stat-label">应完成节点</div>
                     </div>
                     <div class="milestone-stat-card milestone-stat-completed">
-                        <div class="milestone-stat-number" id="ms-completed">-</div>
+                        <div class="milestone-stat-number" id="ms-completed">0</div>
                         <div class="milestone-stat-label">已完成</div>
                     </div>
                     <div class="milestone-stat-card milestone-stat-delayed">
-                        <div class="milestone-stat-number" id="ms-delayed">-</div>
+                        <div class="milestone-stat-number" id="ms-delayed">2</div>
                         <div class="milestone-stat-label">延期未完成</div>
                     </div>
                     <div class="milestone-stat-card milestone-stat-pending">
-                        <div class="milestone-stat-number" id="ms-pending">-</div>
+                        <div class="milestone-stat-number" id="ms-pending">14</div>
                         <div class="milestone-stat-label">待完成</div>
                     </div>
                 </div>
@@ -2839,9 +2853,135 @@ td[data-column*="金额"],
                                 <th>延期天数</th>
                             </tr>
                         </thead>
-                        <tbody id="milestone-dashboard-body">
-                            <tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-muted);">点击"刷新数据"加载里程碑信息</td></tr>
-                        </tbody>
+                        <tbody id="milestone-dashboard-body"><tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('河北墨隆机电财务生产PLM一体化项目')">河北墨隆机电财务生产PLM一体化项目</span></td>
+                    <td>李争光</td>
+                    <td>系统验收</td>
+                    <td>2026-05-31</td>
+                    <td>-</td>
+                    <td><span class="ms-status-badge ms-status-delayed">延期</span></td>
+                    <td><span class="ms-delay-days overdue">超期37天</span></td>
+                </tr><tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('德科诺财务供应链外贸项目')">德科诺财务供应链外贸项目</span></td>
+                    <td>张月洋</td>
+                    <td>系统验收</td>
+                    <td>2026-06-30</td>
+                    <td>-</td>
+                    <td><span class="ms-status-badge ms-status-delayed">延期</span></td>
+                    <td><span class="ms-delay-days overdue">超期7天</span></td>
+                </tr><tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('宁纺集团端升云项目')">宁纺集团端升云项目</span></td>
+                    <td>张聪磊</td>
+                    <td>上线确认</td>
+                    <td>2026-07-15</td>
+                    <td>-</td>
+                    <td><span class="ms-status-badge ms-status-pending">待完成</span></td>
+                    <td><span class="ms-delay-days" style="color:var(--primary);">剩余8天</span></td>
+                </tr><tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('融投集团财务信息化项目')">融投集团财务信息化项目</span></td>
+                    <td>曹青耀</td>
+                    <td>系统验收</td>
+                    <td>2026-08-28</td>
+                    <td>-</td>
+                    <td><span class="ms-status-badge ms-status-pending">待完成</span></td>
+                    <td><span class="ms-delay-days" style="color:var(--primary);">剩余52天</span></td>
+                </tr><tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('金石化工无人值守项目')">金石化工无人值守项目</span></td>
+                    <td>侯莉霞</td>
+                    <td>系统验收</td>
+                    <td>2026-09-11</td>
+                    <td>-</td>
+                    <td><span class="ms-status-badge ms-status-pending">待完成</span></td>
+                    <td><span class="ms-delay-days" style="color:var(--primary);">剩余66天</span></td>
+                </tr><tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('双星星空旗舰版项目')">双星星空旗舰版项目</span></td>
+                    <td>张仕通</td>
+                    <td>蓝图确认</td>
+                    <td>2026-09-15</td>
+                    <td>-</td>
+                    <td><span class="ms-status-badge ms-status-pending">待完成</span></td>
+                    <td><span class="ms-delay-days" style="color:var(--primary);">剩余70天</span></td>
+                </tr><tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('德科诺（工厂）信息化项目')">德科诺（工厂）信息化项目</span></td>
+                    <td> 曹青耀 </td>
+                    <td>系统验收</td>
+                    <td>2026-09-25</td>
+                    <td>-</td>
+                    <td><span class="ms-status-badge ms-status-pending">待完成</span></td>
+                    <td><span class="ms-delay-days" style="color:var(--primary);">剩余80天</span></td>
+                </tr><tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('塞艾斯轴承研产供销HR一体化项目')">塞艾斯轴承研产供销HR一体化项目</span></td>
+                    <td>鲁聚欣</td>
+                    <td>系统验收</td>
+                    <td>2026-09-30</td>
+                    <td>-</td>
+                    <td><span class="ms-status-badge ms-status-pending">待完成</span></td>
+                    <td><span class="ms-delay-days" style="color:var(--primary);">剩余85天</span></td>
+                </tr><tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('莲欣医疗器械项目')">莲欣医疗器械项目</span></td>
+                    <td>于子凌</td>
+                    <td>系统验收</td>
+                    <td>2026-10-08</td>
+                    <td>-</td>
+                    <td><span class="ms-status-badge ms-status-pending">待完成</span></td>
+                    <td><span class="ms-delay-days" style="color:var(--primary);">剩余93天</span></td>
+                </tr><tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('双星星空旗舰版项目')">双星星空旗舰版项目</span></td>
+                    <td>张仕通</td>
+                    <td>上线确认</td>
+                    <td>2026-10-16</td>
+                    <td>-</td>
+                    <td><span class="ms-status-badge ms-status-pending">待完成</span></td>
+                    <td><span class="ms-delay-days" style="color:var(--primary);">剩余101天</span></td>
+                </tr><tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('金科钻孔机械财务供应链生产项目')">金科钻孔机械财务供应链生产项目</span></td>
+                    <td>孟伟朋</td>
+                    <td>系统验收</td>
+                    <td>2026-10-31</td>
+                    <td>-</td>
+                    <td><span class="ms-status-badge ms-status-pending">待完成</span></td>
+                    <td><span class="ms-delay-days" style="color:var(--primary);">剩余116天</span></td>
+                </tr><tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('宁纺集团端升云项目')">宁纺集团端升云项目</span></td>
+                    <td>张聪磊</td>
+                    <td>系统验收</td>
+                    <td>2026-10-31</td>
+                    <td>-</td>
+                    <td><span class="ms-status-badge ms-status-pending">待完成</span></td>
+                    <td><span class="ms-delay-days" style="color:var(--primary);">剩余116天</span></td>
+                </tr><tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('双星星空旗舰版项目')">双星星空旗舰版项目</span></td>
+                    <td>张仕通</td>
+                    <td>系统验收</td>
+                    <td>2026-11-06</td>
+                    <td>-</td>
+                    <td><span class="ms-status-badge ms-status-pending">待完成</span></td>
+                    <td><span class="ms-delay-days" style="color:var(--primary);">剩余122天</span></td>
+                </tr><tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('亚星线缆财务供应链生产项目')">亚星线缆财务供应链生产项目</span></td>
+                    <td>鲁聚欣</td>
+                    <td>系统验收</td>
+                    <td>2026-11-07</td>
+                    <td>-</td>
+                    <td><span class="ms-status-badge ms-status-pending">待完成</span></td>
+                    <td><span class="ms-delay-days" style="color:var(--primary);">剩余123天</span></td>
+                </tr><tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('新东康营养信息化项目')">新东康营养信息化项目</span></td>
+                    <td>张安文</td>
+                    <td>系统验收</td>
+                    <td>2026-11-30</td>
+                    <td>-</td>
+                    <td><span class="ms-status-badge ms-status-pending">待完成</span></td>
+                    <td><span class="ms-delay-days" style="color:var(--primary);">剩余146天</span></td>
+                </tr><tr>
+                    <td><span class="project-name-link" style="cursor:pointer;color:var(--primary);" onclick="showProjectDetailByName('双星种业金蝶AI星空项目')">双星种业金蝶AI星空项目</span></td>
+                    <td>张仕通</td>
+                    <td>系统验收</td>
+                    <td>2026-12-25</td>
+                    <td>-</td>
+                    <td><span class="ms-status-badge ms-status-pending">待完成</span></td>
+                    <td><span class="ms-delay-days" style="color:var(--primary);">剩余171天</span></td>
+                </tr></tbody>
                     </table>
                 </div>
             </div>
@@ -2913,7 +3053,7 @@ td[data-column*="金额"],
         <div id="project-detail-page" class="page">
             <div class="project-detail-container">
                 <div class="project-header">
-                    <h2 id="project-detail-title">项目穿透 - 蓝鸟家具财务费用报销项目</h2>
+                    <h2 id="project-detail-title">项目穿透 - 太行食堂erp项目</h2>
                     <div class="header-buttons">
                         <button onclick="switchDetailTab('penetration')" id="tab-penetration" class="tab-btn active">项目穿透</button>
                         <button onclick="switchDetailTab('milestone')" id="tab-milestone" class="tab-btn">节点备案</button>
@@ -2924,19 +3064,19 @@ td[data-column*="金额"],
                 <div class="project-info-cards">
                     <div class="info-card">
                         <h4>项目编号</h4>
-                        <p id="detail-project-code">PRJ-20250424-000001</p>
+                        <p id="detail-project-code">PRJ-20250620-000023</p>
                     </div>
                     <div class="info-card">
                         <h4>项目经理</h4>
-                        <p id="detail-project-manager">秦铮</p>
+                        <p id="detail-project-manager">于子凌</p>
                     </div>
                     <div class="info-card">
                         <h4>项目名称</h4>
-                        <p id="detail-project-name">蓝鸟家具财务费用报销项目</p>
+                        <p id="detail-project-name">太行食堂erp项目</p>
                     </div>
                     <div class="info-card">
                         <h4>项目状态</h4>
-                        <p id="detail-project-status">验收</p>
+                        <p id="detail-project-status">测试</p>
                     </div>
                 </div>
 
@@ -3004,23 +3144,23 @@ td[data-column*="金额"],
                         <div class="todo-detail-section">
                             <h4>待办事项列表 <button onclick="addTodoRow()" class="btn-add-todo" type="button">+ 添加待办</button></h4>
                             <div id="todo-rows-container">
-                <div class="todo-row" id="todo-row-2">
+                <div class="todo-row" id="todo-row-1">
                     <div class="todo-row-header">
                         <span class="todo-row-title">待办事项 #1</span>
-                        <button onclick="removeTodoRow('todo-row-2')" class="btn-remove-todo">删除</button>
+                        <button onclick="removeTodoRow('todo-row-1')" class="btn-remove-todo">删除</button>
                     </div>
                     <div class="todo-row-grid">
                         <div class="form-col" style="grid-column: 1 / -1;">
                             <label>事项内容：</label>
-                            <textarea class="todo-content-input" placeholder="请描述待办事项的具体内容..."></textarea>
+                            <textarea class="todo-content-input" placeholder="请描述待办事项的具体内容...">解决客户套打和数据对账问题，推动验收</textarea>
                         </div>
                         <div class="form-col">
                             <label>责任人：</label>
-                            <input type="text" class="todo-assignee-input" placeholder="请输入责任人姓名" value="">
+                            <input type="text" class="todo-assignee-input" placeholder="请输入责任人姓名" value="于子凌">
                         </div>
                         <div class="form-col">
                             <label>要求完成时间：</label>
-                            <input type="date" class="todo-deadline-input" value="">
+                            <input type="date" class="todo-deadline-input" value="2026-07-15">
                         </div>
                         <div class="form-col checkbox-col">
                             <input type="checkbox" class="todo-completed-input">
@@ -3041,9 +3181,15 @@ td[data-column*="金额"],
                     </div>
 
                     <div class="penetration-list" id="penetration-list">
-                    <div class="penetration-item" onclick="viewRecordDetail(1783334646496)" style="cursor: pointer;">
-                        <div class="penetration-date">2026-07-03</div>
-                        <div class="penetration-content"><strong>穿透情况：</strong>客户张总已同意验收，后续有时间再解决法定合并报表的问题。</div>
+                    <div class="penetration-item" onclick="viewRecordDetail(1783383479346)" style="cursor: pointer;">
+                        <div class="penetration-date">2026-07-07</div>
+                        
+                        
+                    </div>
+                
+                    <div class="penetration-item" onclick="viewRecordDetail(1783334783684)" style="cursor: pointer;">
+                        <div class="penetration-date">2026-07-02</div>
+                        <div class="penetration-content"><strong>穿透情况：</strong>客户套打模板和5月数据还存在问题，协助客户解决问题，推动验收。</div>
                         
                     </div>
                 </div>
@@ -3053,13 +3199,13 @@ td[data-column*="金额"],
                     <h3>待办事项汇总</h3>
                     <div class="todo-list" id="todo-list">
                     
-                        <div class="todo-item" onclick="viewTodoDetail(1783334646496.5015)" style="cursor: pointer;">
-                            <input type="checkbox" class="todo-checkbox" onclick="event.stopPropagation(); toggleTodo(1783334646496.5015)">
+                        <div class="todo-item" onclick="viewTodoDetail(1783383479347.0254)" style="cursor: pointer;">
+                            <input type="checkbox" class="todo-checkbox" onclick="event.stopPropagation(); toggleTodo(1783383479347.0254)">
                             <div class="todo-info">
-                                <div class="todo-text">和客户确认验收，走签字流程</div>
+                                <div class="todo-text">解决客户套打和数据对账问题，推动验收</div>
                                 <div class="todo-meta">
-                                    <span class="todo-assignee">👤 秦铮</span>
-                                    <span class="todo-deadline ">📅 2026-07-10</span>
+                                    <span class="todo-assignee">👤 于子凌</span>
+                                    <span class="todo-deadline ">📅 2026-07-15</span>
                                 </div>
                             </div>
                         </div>
@@ -3085,13 +3231,34 @@ td[data-column*="金额"],
 
     <div class="modal" id="record-detail-modal">
         <div class="modal-content" style="max-width: 600px;">
-            <h2>穿透记录详情</h2>
+            <h2>待办事项详情</h2>
             <div id="record-detail-content" style="text-align: left; margin: 20px 0;">
-                <!-- 详情内容 -->
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: var(--primary);">事项内容：</strong>
+                    <div style="margin-top: 8px; padding: 10px; background: var(--bg-input); border-radius: 4px; white-space: pre-wrap; border: 1px solid var(--border);">解决客户套打和数据对账问题，推动验收</div>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: var(--primary);">责任人：</strong>
+                    <span style="color: var(--text-primary);">于子凌</span>
+                </div>
+                
+                
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: var(--primary);">要求完成时间：</strong>
+                    <span style="color: var(--text-primary);">2026-07-15 </span>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: var(--primary);">完成状态：</strong>
+                    <span style="color: var(--accent-orange); font-weight: bold;">未完成</span>
+                </div>
+                
+                
             </div>
             <div class="modal-buttons">
                 <button onclick="closeRecordDetailModal()" class="btn-secondary">关闭</button>
-                <button onclick="deleteCurrentRecord()" class="btn-delete">删除记录</button>
+                <button onclick="deleteCurrentTodo()" class="btn-delete">删除待办</button>
             </div>
         </div>
     </div>
@@ -8267,6 +8434,100 @@ td[data-column*="金额"],
             }
         }
 
+        // 批量从云端加载所有项目的穿透数据（用于看板展示待办事项）
+        async function loadAllPenetrationFromCloud() {
+            console.log('[批量加载] 开始从云端加载所有项目穿透数据...');
+
+            if (!OSS_CONFIG.accessKeyId || !OSS_CONFIG.accessKeySecret || !OSS_CONFIG.bucket) {
+                console.log('[批量加载] OSS未配置，跳过');
+                return;
+            }
+
+            const client = await initOSS();
+            if (!client) {
+                console.log('[批量加载] OSS初始化失败，跳过');
+                return;
+            }
+
+            // 收集所有有主项目编号的项目
+            const projectCodeColumn = headers.find(h =>
+                h.includes('主项目编号') || h.includes('项目编号') || h.includes('项目号')
+            );
+            if (!projectCodeColumn) {
+                console.log('[批量加载] 未找到项目编号列');
+                return;
+            }
+
+            let loaded = 0;
+            let failed = 0;
+            const btn = document.getElementById('todo-refresh-btn');
+            if (btn) btn.textContent = '加载中...';
+
+            for (let i = 0; i < excelData.length; i++) {
+                const row = excelData[i];
+                const projectCode = projectCodeColumn ? row[projectCodeColumn] : null;
+                if (!projectCode) continue;
+
+                // 如果已经加载过，跳过
+                if (penetrationData[i] && penetrationData[i].todos && penetrationData[i].todos.length > 0) {
+                    loaded++;
+                    continue;
+                }
+
+                try {
+                    const signedUrl = client.signatureUrl(`p/${projectCode}.json`, {
+                        expires: 3600, method: 'GET'
+                    });
+                    const resp = await fetch(signedUrl);
+                    if (!resp.ok) continue;
+                    const text = await resp.text();
+                    if (text.trim().startsWith('<')) continue;
+                    const data = JSON.parse(text);
+                    if (data.penetrationData) {
+                        if (!penetrationData[i]) {
+                            penetrationData[i] = { records: [], todos: [], milestones: {} };
+                        }
+                        const found = data.penetrationData;
+                        if (found.todos) {
+                            const existIds = new Set(penetrationData[i].todos.map(t => t.id));
+                            found.todos.forEach(todo => {
+                                if (!existIds.has(todo.id)) {
+                                    penetrationData[i].todos.push(todo);
+                                    existIds.add(todo.id);
+                                }
+                            });
+                        }
+                        if (found.records) {
+                            const existIds = new Set(penetrationData[i].records.map(r => r.id));
+                            found.records.forEach(rec => {
+                                if (!existIds.has(rec.id)) {
+                                    penetrationData[i].records.push(rec);
+                                    existIds.add(rec.id);
+                                }
+                            });
+                        }
+                        if (found.milestones) {
+                            penetrationData[i].milestones = { ...penetrationData[i].milestones, ...found.milestones };
+                        }
+                        loaded++;
+                    }
+                } catch (e) {
+                    failed++;
+                }
+            }
+
+            if (btn) btn.textContent = '刷新数据';
+            console.log(`[批量加载] 完成: 成功${loaded}个, 失败${failed}个`);
+        }
+
+        // 刷新待办事项TOP10图表
+        async function refreshTodoChart() {
+            const btn = document.getElementById('todo-refresh-btn');
+            if (btn) btn.textContent = '加载中...';
+            // updateCharts内部已包含loadAllPenetrationFromCloud调用
+            updateDashboard();
+        }
+
         // 自动保存穿透数据到云端（静默版本，不显示提示）
         async function autoSavePenetrationToCloud() {
             console.log('autoSavePenetrationToCloud 被调用');
@@ -9907,7 +10168,10 @@ td[data-column*="金额"],
         }
 
         // 更新小组统计
-        function updateCharts(dataToUse) {
+        async function updateCharts(dataToUse) {
+            // 先从云端批量加载所有项目的穿透数据（待办事项等）
+            await loadAllPenetrationFromCloud();
+
             // 销毁旧图表
             if (window.stageChart) {
                 window.stageChart.destroy();
@@ -10047,22 +10311,43 @@ td[data-column*="金额"],
             if (managerColumn) {
                 // 统计每个项目经理的待办事项数量
                 const managerTodoCount = {};
+                let totalScanned = 0;
+                let totalMatched = 0;
+                let totalWithTodos = 0;
                 
                 allData.forEach(row => {
                     const manager = row[managerColumn];
-                    const projectName = row['主项目名称'];
-                    if (!manager || !projectName) return;
+                    const projectCode = row['主项目编号'];
+                    if (!manager || !projectCode) return;
                     
-                    // 获取该项目的穿透数据
-                    const penetrationData = getProjectPenetration(projectName);
-                    if (penetrationData && penetrationData.todos) {
-                        // 统计未完成的待办事项
-                        const uncompletedTodos = penetrationData.todos.filter(todo => !todo.completed);
+                    // 过滤非项目数据行
+                    const projectName = row['主项目名称'] || '';
+                    if (projectName.includes('标蓝色') || projectName.includes('标绿色') || 
+                        projectName.includes('标黄色') || projectName.includes('备注') || 
+                        projectName.includes('说明')) return;
+                    
+                    totalScanned++;
+                    
+                    // 仅按主项目编号匹配，不要求合同编号也一致
+                    const rowIdx = excelData.findIndex(r =>
+                        r['主项目编号'] === projectCode
+                    );
+                    
+                    if (rowIdx >= 0) {
+                        totalMatched++;
+                    }
+                    
+                    if (rowIdx >= 0 && penetrationData[rowIdx] && penetrationData[rowIdx].todos) {
+                        const uncompletedTodos = penetrationData[rowIdx].todos.filter(todo => !todo.completed);
                         if (uncompletedTodos.length > 0) {
+                            totalWithTodos++;
                             managerTodoCount[manager] = (managerTodoCount[manager] || 0) + uncompletedTodos.length;
                         }
                     }
                 });
+                
+                console.log(`[待办TOP10] 扫描${totalScanned}个项目, 匹配到${totalMatched}个, 有未完成待办的${totalWithTodos}个`);
+                console.log('[待办TOP10] 统计结果:', JSON.stringify(managerTodoCount));
                 
                 const topManagers = Object.entries(managerTodoCount)
                     .sort((a, b) => b[1] - a[1])
@@ -10070,6 +10355,30 @@ td[data-column*="金额"],
 
                 const managerCtx = document.getElementById('manager-chart');
                 if (managerCtx) {
+                    // 清空画布，用于显示空状态提示
+                    const canvasParent = managerCtx.parentElement;
+                    
+                    if (topManagers.length === 0) {
+                        // 无数据时显示提示
+                        const ctx2d = managerCtx.getContext('2d');
+                        ctx2d.clearRect(0, 0, managerCtx.width, managerCtx.height);
+                        ctx2d.fillStyle = '#94a3b8';
+                        ctx2d.font = '14px Arial';
+                        ctx2d.textAlign = 'center';
+                        ctx2d.textBaseline = 'middle';
+                        ctx2d.fillText('暂无待办事项数据', managerCtx.width / 2, managerCtx.height / 2);
+                        return;
+                    }
+                    
+                    // 渐变色数组，从深到浅
+                    const barColors = [
+                        '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16',
+                        '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1'
+                    ];
+                    
+                    const maxValue = Math.max(...topManagers.map(m => m[1]));
+                    const suggestedMax = Math.max(maxValue + 2, 5);
+                    
                     window.managerChart = new Chart(managerCtx.getContext('2d'), {
                         type: 'bar',
                         data: {
@@ -10077,45 +10386,59 @@ td[data-column*="金额"],
                             datasets: [{
                                 label: '待办事项数',
                                 data: topManagers.map(m => m[1]),
-                                backgroundColor: '#ff6b6b'
+                                backgroundColor: topManagers.map((_, i) => barColors[i % barColors.length]),
+                                borderRadius: 4,
+                                borderSkipped: false,
+                                barThickness: topManagers.length <= 3 ? 28 : 20
                             }]
                         },
                         options: {
+                            indexAxis: 'y',
                             responsive: true,
                             maintainAspectRatio: false,
+                            onClick: (evt, elements) => {
+                                if (elements.length > 0) {
+                                    const idx = elements[0].index;
+                                    const managerName = window.managerChart.data.labels[idx];
+                                    if (managerName) showTodoDrilldown(managerName);
+                                }
+                            },
+                            onHover: (evt, elements) => {
+                                evt.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+                            },
                             scales: {
-                                y: {
+                                x: {
                                     beginAtZero: true,
+                                    suggestedMax: suggestedMax,
                                     ticks: {
-                                        stepSize: 1,
-                                        color: '#64748b'
+                                        stepSize: Math.max(1, Math.ceil(suggestedMax / 5)),
+                                        color: '#64748b',
+                                        font: { size: 11 }
                                     },
                                     grid: {
-                                        color: 'rgba(0, 0, 0, 0.06)'
+                                        color: 'rgba(0, 0, 0, 0.06)',
+                                        drawBorder: false
                                     }
                                 },
-                                x: {
+                                y: {
                                     ticks: {
-                                        color: '#64748b'
+                                        color: '#334155',
+                                        font: { size: 12, weight: '500' },
+                                        padding: 8
                                     },
                                     grid: {
-                                        color: 'rgba(0, 0, 0, 0.04)'
+                                        display: false
                                     }
                                 }
                             },
                             plugins: {
                                 legend: {
-                                    display: true,
-                                    position: 'top',
-                                    labels: {
-                                        color: '#1e293b',
-                                        font: { size: 12 }
-                                    }
+                                    display: false
                                 }
                             }
                         },
                         plugins: [{
-                            id: 'barLabels',
+                            id: 'horizontalBarLabels',
                             afterDatasetsDraw: (chart) => {
                                 const ctx = chart.ctx;
                                 chart.data.datasets.forEach((dataset, i) => {
@@ -10123,11 +10446,11 @@ td[data-column*="金额"],
                                     meta.data.forEach((bar, index) => {
                                         const data = dataset.data[index];
                                         if (data > 0) {
-                                            ctx.fillStyle = '#1e293b';
+                                            ctx.fillStyle = '#334155';
                                             ctx.font = 'bold 12px Arial';
-                                            ctx.textAlign = 'center';
-                                            ctx.textBaseline = 'bottom';
-                                            ctx.fillText(data, bar.x, bar.y - 5);
+                                            ctx.textAlign = 'left';
+                                            ctx.textBaseline = 'middle';
+                                            ctx.fillText(data, bar.x + 6, bar.y);
                                         }
                                     });
                                 });
@@ -10136,6 +10459,107 @@ td[data-column*="金额"],
                     });
                 }
             }
+        }
+
+        // ========== 待办事项联查功能 ==========
+        
+        // 显示某项目经理的所有未完成待办事项
+        function showTodoDrilldown(managerName) {
+            const managerColumn = headers.find(h => h.includes('项目经理') || h.includes('负责人'));
+            if (!managerColumn) return;
+
+            // 收集该经理所有项目的未完成待办
+            const todoItems = [];
+            const allData = [];
+            if (Object.keys(allSheetsData).length > 0) {
+                Object.entries(allSheetsData).forEach(([sheetName, sheetData]) => {
+                    if (sheetName.includes('小组')) {
+                        allData.push(...(sheetData.data || []));
+                    }
+                });
+            } else {
+                allData.push(...(originalExcelData.length > 0 ? originalExcelData : excelData));
+            }
+
+            const seen = new Set();
+            allData.forEach(row => {
+                const manager = row[managerColumn];
+                const projectCode = row['主项目编号'];
+                if (manager !== managerName || !projectCode) return;
+
+                const projectName = row['主项目名称'] || '';
+                if (projectName.includes('标蓝色') || projectName.includes('标绿色') || 
+                    projectName.includes('标黄色') || projectName.includes('备注') || 
+                    projectName.includes('说明')) return;
+
+                if (seen.has(projectCode)) return;
+                seen.add(projectCode);
+
+                const rowIdx = excelData.findIndex(r => r['主项目编号'] === projectCode);
+                if (rowIdx >= 0 && penetrationData[rowIdx] && penetrationData[rowIdx].todos) {
+                    const uncompleted = penetrationData[rowIdx].todos.filter(t => !t.completed);
+                    uncompleted.forEach(todo => {
+                        todoItems.push({
+                            projectName: projectName,
+                            projectCode: projectCode,
+                            text: todo.text || '',
+                            assignee: todo.assignee || '',
+                            deadline: todo.deadline || '',
+                        });
+                    });
+                }
+            });
+
+            // 渲染弹窗内容
+            const title = document.getElementById('todo-drilldown-title');
+            const body = document.getElementById('todo-drilldown-body');
+            title.textContent = `${managerName} 的待办事项（${todoItems.length}项）`;
+
+            if (todoItems.length === 0) {
+                body.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:40px 0;">暂无未完成待办事项</div>';
+            } else {
+                // 按项目分组
+                const grouped = {};
+                todoItems.forEach(item => {
+                    const key = item.projectCode + '|' + item.projectName;
+                    if (!grouped[key]) grouped[key] = [];
+                    grouped[key].push(item);
+                });
+
+                let html = '';
+                Object.entries(grouped).forEach(([key, items]) => {
+                    const pName = key.split('|')[1] || '未知项目';
+                    html += '<div style="margin-bottom:16px;">';
+                    html += '<div style="font-size:13px; font-weight:600; color:#1e293b; margin-bottom:8px; padding:6px 10px; background:#f8fafc; border-radius:6px; border-left:3px solid var(--primary);">' + pName + ' <span style="color:#94a3b8; font-weight:400;">(' + items.length + '项)</span></div>';
+                    html += '<table style="width:100%; border-collapse:collapse; font-size:13px;">';
+                    html += '<thead><tr style="color:#64748b; background:#f8fafc;">';
+                    html += '<th style="padding:6px 10px; text-align:left; border-bottom:1px solid #e2e8f0; width:45%;">待办内容</th>';
+                    html += '<th style="padding:6px 10px; text-align:left; border-bottom:1px solid #e2e8f0; width:20%;">责任人</th>';
+                    html += '<th style="padding:6px 10px; text-align:left; border-bottom:1px solid #e2e8f0; width:20%;">截止日期</th>';
+                    html += '<th style="padding:6px 10px; text-align:center; border-bottom:1px solid #e2e8f0; width:15%;">状态</th>';
+                    html += '</tr></thead><tbody>';
+                    items.forEach(item => {
+                        const isOverdue = item.deadline && new Date(item.deadline) < new Date();
+                        const deadlineStyle = isOverdue ? 'color:#ef4444; font-weight:500;' : '';
+                        html += '<tr>';
+                        html += '<td style="padding:8px 10px; border-bottom:1px solid #f1f5f9;">' + (item.text || '-') + '</td>';
+                        html += '<td style="padding:8px 10px; border-bottom:1px solid #f1f5f9;">' + (item.assignee || '-') + '</td>';
+                        html += '<td style="padding:8px 10px; border-bottom:1px solid #f1f5f9; ' + deadlineStyle + '">' + (item.deadline || '-') + (isOverdue ? ' <span style="font-size:11px; background:#fef2f2; color:#ef4444; padding:1px 5px; border-radius:3px;">已逾期</span>' : '') + '</td>';
+                        html += '<td style="padding:8px 10px; border-bottom:1px solid #f1f5f9; text-align:center;"><span style="font-size:11px; background:#fff7ed; color:#ea580c; padding:2px 8px; border-radius:3px;">待完成</span></td>';
+                        html += '</tr>';
+                    });
+                    html += '</tbody></table></div>';
+                });
+                body.innerHTML = html;
+            }
+
+            const overlay = document.getElementById('todo-drilldown-overlay');
+            overlay.style.display = 'flex';
+        }
+
+        // 关闭待办事项联查弹窗
+        function closeTodoDrilldown() {
+            document.getElementById('todo-drilldown-overlay').style.display = 'none';
         }
 
         // ========== 里程碑完成情况看板 ==========
